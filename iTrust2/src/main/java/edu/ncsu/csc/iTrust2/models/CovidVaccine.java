@@ -6,7 +6,6 @@ import javax.persistence.ElementCollection;
 import javax.persistence.Embedded;
 import javax.persistence.Entity;
 import javax.validation.constraints.Min;
-import javax.validation.constraints.NotNull;
 
 import edu.ncsu.csc.iTrust2.forms.CovidVaccineForm;
 
@@ -16,7 +15,6 @@ public class CovidVaccine extends Drug {
     @Min ( 0 )
     private short         numDoses;
 
-    @NotNull
     @Embedded
     private DoseInterval  doseInterval;
 

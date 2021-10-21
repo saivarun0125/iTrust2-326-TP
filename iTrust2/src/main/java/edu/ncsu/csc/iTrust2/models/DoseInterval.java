@@ -2,11 +2,14 @@ package edu.ncsu.csc.iTrust2.models;
 
 import java.time.temporal.ChronoUnit;
 
+import javax.persistence.Embeddable;
+
+@Embeddable
 public class DoseInterval {
 
     private ChronoUnit intervalType;
 
-    private int        intervalAmount;
+    private Integer    intervalAmount;
 
     /**
      * for hibernate

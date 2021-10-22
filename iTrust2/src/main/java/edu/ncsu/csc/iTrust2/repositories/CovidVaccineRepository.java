@@ -3,7 +3,6 @@ package edu.ncsu.csc.iTrust2.repositories;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import edu.ncsu.csc.iTrust2.models.CovidVaccine;
-import edu.ncsu.csc.iTrust2.models.Drug;
 
 /**
  * Repository for interacting with CovidVaccine model. Method implementations
@@ -29,5 +28,5 @@ public interface CovidVaccineRepository extends JpaRepository<CovidVaccine, Long
      *            Code to search by
      * @return The CovidVaccine, if it exists
      */
-    public Drug findByCode ( String code );
+    public CovidVaccine findByCode ( String code );
 }

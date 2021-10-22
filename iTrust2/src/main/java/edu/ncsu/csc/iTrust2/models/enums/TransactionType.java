@@ -557,6 +557,22 @@ public enum TransactionType {
      * Virologist views R0 value
      */
     VIROLOGIST_VIEW_RNAUGHT ( 3001, "Virologist views calculated R0 value", false ),
+    /**
+     * Admin created a new drug
+     */
+    COVID_VACCINE_CREATE ( 3100, "Admin created a new covid vaccine", true ),
+    /**
+     * Admin edited an existing drug
+     */
+    COVID_VACCINE_EDIT ( 3101, "Admin edited an existing covid vaccine", true ),
+    /**
+     * Admin deleted an existing drug
+     */
+    COVID_VACCINE_DELETE ( 3102, "Admin deleted an existing covid vaccine", true ),
+    /**
+     * Admin views all drugs in the system
+     */
+    COVID_VACCINE_VIEW ( 3103, "Admin views all covid vaccines in the system", true ),
 
     /**
      * When an HTTP request got intercepted, generic transaction type.

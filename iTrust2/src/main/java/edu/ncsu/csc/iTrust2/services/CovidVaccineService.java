@@ -7,7 +7,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Component;
 
 import edu.ncsu.csc.iTrust2.models.CovidVaccine;
-import edu.ncsu.csc.iTrust2.models.Drug;
 import edu.ncsu.csc.iTrust2.repositories.CovidVaccineRepository;
 
 @Component
@@ -41,7 +40,7 @@ public class CovidVaccineService extends Service<CovidVaccine, Long> {
      *            Code to check
      * @return CovidVaccine, if found
      */
-    public Drug findByCode ( final String code ) {
+    public CovidVaccine findByCode ( final String code ) {
         return repository.findByCode( code );
     }
 

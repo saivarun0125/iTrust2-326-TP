@@ -12,8 +12,6 @@ public class CovidVaccineForm extends DrugForm {
 
     private List<Integer> ageRange;
 
-    private Long          id;
-
     /**
      * Empty constructor for filling in fields without a CovidVaccine object.
      */
@@ -79,27 +77,6 @@ public class CovidVaccineForm extends DrugForm {
      */
     public void setAgeRange ( final List<Integer> ageRange ) {
         this.ageRange = ageRange;
-    }
-
-    /**
-     * Returns the ID of the entry in the DB
-     *
-     * @return long
-     */
-    @Override
-    public Long getId () {
-        return id;
-    }
-
-    /**
-     * Set the ID of the Inventory (Used by Hibernate)
-     *
-     * @param id
-     *            the ID
-     */
-    @Override
-    public void setId ( final Long id ) {
-        this.id = id;
     }
 
 }

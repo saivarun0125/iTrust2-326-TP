@@ -46,7 +46,7 @@
     					dupNDC = true;
     			}
     			
-    			if (dupNDC)
+    			if (dupNDC && !($scope.edit))
     				err.push("Code already used by a drug or vaccine.")
     			
     		}
@@ -161,6 +161,7 @@
         
 
         $scope.addDrug = function () {
+          $scope.edit = false;
           var err = checkValidDrug($scope.drug);
           console.log(err);
           if ($scope.isVaccine) {
@@ -259,7 +260,7 @@
           $scope.selectedDrug = angular.copy(drug);
         };
         $scope.saveDrug = function () {
-        	
+        	$scope.edit = true;
           if (isVaccine($scope.selectedDrug)) {
         	  var err = checkValidDrug($scope.selectedDrug);
            	  var oldAgeRange = $scope.selectedDrug.ageRange;

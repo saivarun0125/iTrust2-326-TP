@@ -339,7 +339,8 @@
         	return ageRangeArray[0] + "-" + ageRangeArray[1];
         }
         
-        $scope.formType = "drug";
+        $scope.formType = "";
+        
         
         $scope.loadForm = function(){
         	if ($scope.formType === "drug") {
@@ -350,12 +351,19 @@
         }
         
         $scope.loadVaccineForm = function(){
+        	document.getElementById("btnDrugForm").style.border = "";
+        	document.getElementById("btnVaccineForm").style.border = "3px solid black";
         	$scope.formType = "vaccine";
         }
         
         $scope.loadDrugForm = function(){
+        	document.getElementById("btnDrugForm").style.border = "3px solid black";
+        	document.getElementById("btnVaccineForm").style.border = "";
         	$scope.formType = "drug";
         }
+        
+        // load drug form init
+        $scope.loadDrugForm();
 
         // load table initially
         $scope.loadTable();
@@ -636,8 +644,8 @@
 									<div class="col-md-12">
 										<div class="panel panel-default">
 											<div class="panel-heading ">
-												<input type="button" value="Drug Form" class="btn btn-primary" name="formDrug" ng-click="loadDrugForm()" />
-												<input type="button" value="Vaccine Form" class="btn btn-primary" name="formVaccine" ng-click="loadVaccineForm()" />
+												<input type="button" value="Drug Form" class="btn btn-primary" id="btnDrugForm" name="formDrug" ng-click="loadDrugForm()" />
+												<input type="button" value="Vaccine Form" class="btn btn-primary" id="btnVaccineForm" name="formVaccine" ng-click="loadVaccineForm()" />
 											</div>
 											<div class="panel-body" ng-include="loadForm()">
 												

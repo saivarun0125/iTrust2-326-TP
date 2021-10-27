@@ -81,13 +81,27 @@ public class APIUserTest {
 
         Assert.assertEquals( "It should be possible to create a user with multiple roles", 2, service.count() );
 
-        final User retrieved = service.findByName( USER_2 );
+        User retrieved = service.findByName( USER_2 );
 
         Assert.assertNotNull( "The created user should be retrievable from the database", retrieved );
 
         Assert.assertEquals( "The retrieved user should be a Personnel", Personnel.class, retrieved.getClass() );
 
         Assert.assertEquals( "The retrieved user should have 3 roles", 3, retrieved.getRoles().size() );
+
+        final UserForm u3 = new UserForm( "API_USER_3", PW, Role.ROLE_HCP, 1 );
+        u3.addRole( Role.ROLE_VACCINATOR.toString() );
+        mvc.perform( MockMvcRequestBuilders.post( "/api/v1/users" ).contentType( MediaType.APPLICATION_JSON )
+                .content( TestUtils.asJsonString( u3 ) ) ).andExpect( MockMvcResultMatchers.status().isOk() );
+
+        Assert.assertEquals( "It should be possible to create a vaccinator", 3, service.count() );
+
+        retrieved = service.findByName( "API_USER_3" );
+
+        Assert.assertNotNull( "The created user should be retrievable from the database", retrieved );
+
+        Assert.assertTrue( "The created user should be a vaccinator",
+                retrieved.getRoles().contains( Role.ROLE_VACCINATOR ) );
 
     }
 

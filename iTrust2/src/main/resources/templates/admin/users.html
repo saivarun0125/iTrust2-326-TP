@@ -14,16 +14,16 @@
 					var err = [];
 					for(var i = 0; i < $scope.users.length; i++ ) {
 						if( $scope.user.username === $scope.users[i].username) {
-						    err.push("Username already exists");
+						    err.push("Username already exists.");
 						}
 					}
 	       	        if( $scope.user.password === $scope.user.password2) {
 					    // do nothing
 					} else {
-						err.push("passwords do not match" );
+						err.push("Passwords do not match." );
 					}
 	 				if( $scope.user.password.length < 6)
-	 					err.push("Password must be more than 6 characters long");
+	 					err.push("Password must be more than 6 characters long.");
 					return err.join(".  ");
 				}
 				
@@ -81,7 +81,7 @@
 	                $scope.loadUsers();
 	              }, function (rejection) {
 	            	    $scope.loadUsers();
-	                $scope.message = "Could not remove user";
+	                $scope.message = "Could not remove user.";
 	              });
 	          }
 	        
@@ -102,14 +102,15 @@
 	        }
 	        
         	$scope.roles = [
-	        	    "ROLE_PATIENT",
+	        	    "ROLE_PATIENT" ,
 	        	    "ROLE_HCP" ,
 	        	    "ROLE_OD" ,
 	        	    "ROLE_OPH" ,
-	        	    "ROLE_ADMIN", 
-	        	    "ROLE_ER",
-	        	    "ROLE_VIROLOGIST", 
+	        	    "ROLE_ADMIN" , 
+	        	    "ROLE_ER" ,
+	        	    "ROLE_VIROLOGIST" , 
 	        	    "ROLE_LABTECH" ,
+	        	    "ROLE_VACCINATOR" ,
 	        ];
         	
         	$scope.selectHCP = function(role) {
@@ -220,7 +221,7 @@ input[type=password] {
 														id="username" ng-model="user.username" /> <br> <br>
 													<b>Password:</b> <input type="password" name="password"
 														id="password" ng-model="user.password" /> <br> <br>
-													<b>Password (again):</b> <input type="password"
+													<b>Confirm Password:</b> <input type="password"
 														name="password2" id="password2" ng-model="user.password2" />
 													<br> <br> <b>Role:</b>
 
@@ -230,7 +231,7 @@ input[type=password] {
 													</div>
 
 													<br> <br> <b>Enabled?:</b> <input type="checkbox"
-														name="enabled" class="checkbox" ng-model="user.enabled" />
+														name="enabled" class="checkbox" ng-model="user.enabled" ng-change="enabledText(user)" />
 													<br> <input type="submit" id="submit" value="Add User" />
 												</form>
 												<div>

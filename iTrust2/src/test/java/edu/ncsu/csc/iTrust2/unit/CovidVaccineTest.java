@@ -62,7 +62,7 @@ public class CovidVaccineTest {
 
         // get the vaccine and check to make sure that the values are the same
         Assert.assertTrue( service.existsByCode( "0000-0000-00" ) );
-        CovidVaccine returnVaccine = (CovidVaccine) service.findByCode( "0000-0000-00" );
+        CovidVaccine returnVaccine = service.findByCode( "0000-0000-00" );
         Assert.assertEquals( pfizer, returnVaccine );
         Assert.assertTrue( "0000-0000-00".equals( returnVaccine.getCode() ) );
         Assert.assertTrue( returnVaccine.getDescription().equals( "Covid shot" ) );
@@ -95,7 +95,7 @@ public class CovidVaccineTest {
         // ensure that you can get the newly added vaccine and that the values
         // are the same
         Assert.assertTrue( service.existsByCode( "1111-1111-11" ) );
-        returnVaccine = (CovidVaccine) service.findByCode( "1111-1111-11" );
+        returnVaccine = service.findByCode( "1111-1111-11" );
         Assert.assertEquals( moderna, returnVaccine );
         Assert.assertTrue( "1111-1111-11".equals( returnVaccine.getCode() ) );
         Assert.assertTrue( returnVaccine.getDescription().equals( "Covid shot Number Two" ) );
@@ -107,7 +107,7 @@ public class CovidVaccineTest {
         Assert.assertEquals( 2, returnVaccine.getDoseInterval().getIntervalAmount() );
 
         // ensure that the other vaccine wasn't changed
-        returnVaccine = (CovidVaccine) service.findByCode( "0000-0000-00" );
+        returnVaccine = service.findByCode( "0000-0000-00" );
         Assert.assertEquals( pfizer, returnVaccine );
         Assert.assertTrue( "0000-0000-00".equals( returnVaccine.getCode() ) );
         Assert.assertTrue( returnVaccine.getDescription().equals( "Covid shot" ) );

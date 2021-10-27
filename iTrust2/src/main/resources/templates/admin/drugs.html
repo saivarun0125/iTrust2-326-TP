@@ -33,21 +33,29 @@
     			console.error("NDC error");
     		}
     		
-    		var isVaccine = true;
+    		var vaccineForm = true;
     		
-    		var isntNumDoses = drug.numDoses === null || drug.numDoses === "";
-    		var isntDoseInterval = !('doseInterval' in drug) || (drug.doseInterval["intervalType"] === "" && drug.doseInterval['intervalAmount'] === "");
-    		var isntAgeRange = drug.ageRange === null || drug.ageRange === "";
+    		var isntNumDoses = !("numDoses" in drug) || drug.numDoses === null || drug.numDoses === "";
+    		var isntDoseInterval = !('doseInterval' in drug) || !("intervalType" in drug.doseInterval && "intervalAmount" in drug.doseInterval) || (drug.doseInterval["intervalType"] === "" && drug.doseInterval['intervalAmount'] === "");
+    		var isntAgeRange = !("ageRange" in drug) || drug.ageRange === null || drug.ageRange === "";
+    		
+    		console.log(isntNumDoses);
+    		console.log(isntDoseInterval);
+    		console.log(isntAgeRange);
+    		
     		
     		if (isntNumDoses && isntDoseInterval && isntAgeRange) {
-    			isVaccine = false;
+    			vaccineForm = false;
     			$scope.isVaccine = false;
     		} else {
-    			isVaccine = true;
+    			console.log(drug.numDoses);
+        		console.log(drug.doseInterval);
+        		console.log(drug.ageRange);
+    			vaccineForm = true;
     			$scope.isVaccine = true;
     		}
     		
-    		if (isVaccine) {
+    		if (vaccineForm) {
     			
     			if ("numDoses" in drug) {
     				// check to make sure that the number of doses is numerical
@@ -110,10 +118,20 @@
     	}
 
         $scope.drugs = [];
+        $scope.vaccines = [];
         $scope.loadTable = function () {
           $http.get("/iTrust2/api/v1/drugs").then(
             function (response) {
-              $scope.drugs = response.data;
+              $scope.drugs = [];
+              $scope.vaccines = [];
+              response.data.forEach((element) => {
+            	  if (isVaccine(element)) {
+            		  $scope.vaccines.push(element);
+            	  } else {
+            		  $scope.drugs.push(element);
+            	  }	  
+              });
+              // $scope.drugs = response.data;
               $scope.message = "";
             }, function (rejection) {
               $scope.drugs = [];
@@ -169,43 +187,90 @@
         }
 
         $scope.deleteDrug = function (drug) {
-          $http.delete('/iTrust2/api/v1/CovidVaccines/' + drug.id).then(
-            function (response) {
-              $scope.loadTable();
-              $scope.message = "";
-            }, function (rejection) {
-              $scope.message = "Could not remove drug";
-            })
+        	if (isVaccine(drug)) {
+        		$http.delete('/iTrust2/api/v1/CovidVaccines/' + drug.id).then(
+        	            function (response) {
+        	              $scope.loadTable();
+        	              $scope.message = "";
+        	            }, function (rejection) {
+        	              $scope.message = "Could not remove drug";
+        	            });
+        	} else {
+        		$http.delete('/iTrust2/api/v1/drugs/' + drug.id).then(
+        	            function (response) {
+        	              $scope.loadTable();
+        	              $scope.message = "";
+        	            }, function (rejection) {
+        	              $scope.message = "Could not remove drug";
+        	            });
+        	}
+        	
+          
         }
 
         // gets the template to ng-include for a table row / item
         $scope.selectedDrug = {};
 
         $scope.getTemplate = function (drug) {
-          if (drug.id === $scope.selectedDrug.id) return 'edit';
-          else return 'view';
+        	
+          if (isVaccine(drug)) {
+        	  if (drug.id === $scope.selectedDrug.id) return 'editvaccine';
+              else return 'viewvaccine';
+          }	else {
+        	  if (drug.id === $scope.selectedDrug.id) return 'editdrug';
+              else return 'viewdrug';
+          }
+          
         };
+        
+        function isVaccine(drug) {
+        	if ("ageRange" in drug && "numDoses" in drug && "doseInterval" in drug) {
+      		  return true;
+      	  } else {
+      		  return false;
+      	  }	
+        }
 
         $scope.editDrug = function (drug) {
           $scope.selectedDrug = angular.copy(drug);
         };
         $scope.saveDrug = function () {
-       	  var err = checkValidDrug($scope.selectedDrug);
-       	  console.log(err);
-       	  var oldAgeRange = $scope.selectedDrug.ageRange;
-       	  ageRangeSelectedParser($scope.selectedDrug.ageRange)
-          if (err) {
-            $scope.errorAdding = err;
-            $scope.selectedDrug.ageRange = oldAgeRange;
+        	
+          if (isVaccine($scope.selectedDrug)) {
+        	  var err = checkValidDrug($scope.selectedDrug);
+           	  console.log(err);
+           	  var oldAgeRange = $scope.selectedDrug.ageRange;
+           	  ageRangeSelectedParser($scope.selectedDrug.ageRange)
+              if (err) {
+                $scope.errorAdding = err;
+                $scope.selectedDrug.ageRange = oldAgeRange;
+              } else {
+                $http.put("/iTrust2/api/v1/CovidVaccines", $scope.selectedDrug).then(
+                  function (response) {
+                	$scope.errorAdding = "";
+                    $scope.loadTable();
+                    $scope.resetSelected();         
+                  }, function (rejection) {
+                    $scope.errorAdding = "Failed to edit drug";
+                  });
+              }
           } else {
-            $http.put("/iTrust2/api/v1/CovidVaccines", $scope.selectedDrug).then(
-              function (response) {
-                $scope.loadTable();
-                $scope.resetSelected();         
-              }, function (rejection) {
-                $scope.errorAdding = "Failed to edit drug";
-              });
+        	  var err = checkValidDrug($scope.selectedDrug);
+              if (err) {
+                $scope.errorAdding = err;
+              } else {
+                $http.put("/iTrust2/api/v1/drugs", $scope.selectedDrug).then(
+                  function (response) {
+                	$scope.errorAdding = "";
+                    $scope.loadTable();
+                    $scope.resetSelected();
+                  }, function (rejection) {
+                    $scope.errorAdding = "Failed to edit drug";
+                  });
+              }
           }
+          
+       	  
         };
 
         $scope.resetSelected = function () {
@@ -274,27 +339,57 @@
 							<div class="panel-body">
 								<table class="table table-bordered">
 									<caption>Existing Medications:</caption>
-									<thead>
-										<tr>
-											<th>Drug</th>
-											<th>Doses</th>
-											<th>Interval Type</th>
-											<th>Interval Amount</th>
-											<th>Age Range</th>
-											<th>NDC</th>
-											<th>Description</th>
-											<th>Action</th>
-										</tr>
-									</thead>
-									<tbody>
-										<tr name="drugTableRow"
-											ng-repeat="d in drugs | orderBy: 'name'"
-											ng-include="getTemplate(d)" drugId={{d.id}}>
-										</tr>
-									</tbody>
+									<tr>
+										<td>
+											<table class="table table-bordered">
+											    <caption>Drugs:</caption>
+												<thead>
+													<tr>
+														<th>Drug</th>
+														<th>NDC</th>
+														<th>Description</th>
+														<th>Action</th>
+													</tr>
+												</thead>
+												<tbody>
+													<tr name="drugTableRow"
+													ng-repeat="d in drugs | orderBy: 'name'"
+													ng-include="getTemplate(d)"
+													drugId={{d.id}}>
+													</tr>
+												</tbody>
+											</table>
+										</td>
+									</tr>
+									<tr>
+										<td>
+											<table class="table table-bordered">
+											    <caption>Vaccines:</caption>
+												<thead>
+													<tr>
+														<th>Vaccine</th>
+														<th>Doses</th>
+														<th>Interval Type</th>
+														<th>Interval Amount</th>
+														<th>Age Range</th>
+														<th>NDC</th>
+														<th>Description</th>
+														<th>Action</th>
+													</tr>
+												</thead>
+												<tbody>
+													<tr name="drugTableRow"
+													ng-repeat="d in vaccines | orderBy: 'name'"
+													ng-include="getTemplate(d)"
+													drugId={{d.id}}>
+													</tr>
+												</tbody>
+											</table>
+										</td>
+									</tr>
 								</table>
 								<!-- table in view mode -->
-								<script type="text/ng-template" id="view">
+								<script type="text/ng-template" id="viewvaccine">
                   <td name="nameCell">{{d.name}}</td>
 
 //added these lines below
@@ -318,7 +413,7 @@
                 </script>
 
 								<!-- table in edit mode -->
-								<script type="text/ng-template" id="edit">
+								<script type="text/ng-template" id="editvaccine">
                   <td name="editNameCell">
                     <input type="text" class="form-control" ng-model="selectedDrug.name" />
                   </td>
@@ -347,6 +442,46 @@
                     <input type="text" class="form-control" ng-model="selectedDrug.ageRange" />
                   </td>
 
+                  <td name="editCodeCell">
+                    <input type="text" class="form-control" ng-model="selectedDrug.code" />
+                  </td>
+                  <td name="editDescriptionCell">
+                    <input type="text" class="form-control" ng-model="selectedDrug.description" />
+                  </td>
+                  <td>
+                    <div class="row text-center">
+                      <div class="col-md-6">
+                          <input type="button" value="Save" class="btn btn-success" name="saveDrug" ng-click="saveDrug()" />                          
+                      </div>
+                      <div class="col-md-6">
+                          <input type="button" value="Cancel" class="btn btn-danger" name="cancelEdit" ng-click="resetSelected()" />                            
+                      </div>
+                    </div>
+                  </td>
+                </script>
+                
+                <!-- table in view mode -->
+								<script type="text/ng-template" id="viewdrug">
+                  <td name="nameCell">{{d.name}}</td>
+                  <td name="codeCell">{{d.code}}</td>
+                  <td name="descriptionCell">{{d.description}}</td>
+                  <td>
+                    <div class="row text-center">
+                      <div class="col-md-6">
+                        <input type="button" value="Edit" class="btn btn-primary" name="editDrug" ng-click="editDrug(d)" />                         
+                      </div>
+                      <div class="col-md-6">
+                          <input type="button" value="Delete" class="btn btn-danger" name="deleteDrug" ng-click="deleteDrug(d)" />                          
+                      </div>
+                    </div>
+                  </td>
+                </script>
+
+								<!-- table in edit mode -->
+								<script type="text/ng-template" id="editdrug">
+                  <td name="editNameCell">
+                    <input type="text" class="form-control" ng-model="selectedDrug.name" />
+                  </td>
                   <td name="editCodeCell">
                     <input type="text" class="form-control" ng-model="selectedDrug.code" />
                   </td>

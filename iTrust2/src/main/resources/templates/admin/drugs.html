@@ -22,19 +22,34 @@
     		var err = [];
     		if (drug.description.length > 1024) {
     			err.push("Description exceeds character limit of 1024");
+    			console.error("desc. error");
     		}
     		if (drug.name.length > 64) {
     			err.push("Name exceeds the character limit of 64");
+    			console.error("name error");
     		}
     		if (!/^\d{4}-\d{4}-\d{2}$/.test(drug.code)) {
     			err.push("Code must be in the format XXXX-XXXX-XX");
+    			console.error("NDC error");
+    		}
+    		if (drug.numDoses.length > 1) {
+    			err.push("Doses exceeds the character limit of 1");
+    			console.error("number of doses error");
+    		}
+    		if (drug.doseInterval['intervalAmount'].length > 1) {
+    			err.push("Interval exceeds the character limit of 1");
+    			console.error("interval amount error");
+    		}
+    		if (!/\d+-\d+/.test(drug.ageRange)) {
+    			err.push("Age Range isn't in the format NUMBER-NUMBER");
+    			console.error("age range error");
     		}
     		return err.join(". ");
     	}
 
         $scope.drugs = [];
         $scope.loadTable = function () {
-          $http.get("/iTrust2/api/v1/drugs").then(
+          $http.get("/iTrust2/api/v1/CovidVaccines").then(
             function (response) {
               $scope.drugs = response.data;
               $scope.message = "";
@@ -43,16 +58,25 @@
               $scope.message = "Could not display drugs";
             });
         }
+        
+         
+        
 
         $scope.addDrug = function () {
           var err = checkValidDrug($scope.drug);
+          var oldAgeRange = $scope.drug.ageRange;
+          ageRangeParser($scope.drug.ageRange);
           if (err) {
             $scope.errorAdding = err;
+            $scope.drug.ageRange = oldAgeRange;
           } else {
-            $http.post("/iTrust2/api/v1/drugs", $scope.drug).then(
+            $http.post("/iTrust2/api/v1/CovidVaccines", $scope.drug).then(
               function (response) {
                 $scope.loadTable();
                 $scope.drug.name = "";
+                $scope.drug.numDoses = "";
+                $scope.drug.doseInterval = {};
+                $scope.drug.ageRange = ""; 
                 $scope.drug.code = "";
                 $scope.drug.description = "";
                 $scope.errorAdding = "";
@@ -60,11 +84,15 @@
                 $scope.errorAdding = "Could not add drug";
               });
           }
+          
+           
+          
+          
 
         }
 
         $scope.deleteDrug = function (drug) {
-          $http.delete('/iTrust2/api/v1/drugs/' + drug.id).then(
+          $http.delete('/iTrust2/api/v1/CovidVaccines/' + drug.id).then(
             function (response) {
               $scope.loadTable();
               $scope.message = "";
@@ -86,10 +114,11 @@
         };
         $scope.saveDrug = function () {
        	  var err = checkValidDrug($scope.selectedDrug);
+       	  ageRangeSelectedParser($scope.selectedDrug.ageRange)
           if (err) {
             $scope.errorAdding = err;
           } else {
-            $http.put("/iTrust2/api/v1/drugs", $scope.selectedDrug).then(
+            $http.put("/iTrust2/api/v1/CovidVaccines", $scope.selectedDrug).then(
               function (response) {
                 $scope.loadTable();
                 $scope.resetSelected();         
@@ -102,6 +131,29 @@
         $scope.resetSelected = function () {
           $scope.selectedDrug = {};
         };
+        
+        function ageRangeParser(ageRange){
+        	var ageRangeArray = ageRange.split("-");
+        	$scope.drug.ageRange = ageRangeArray;
+        }
+        
+        function ageRangeSelectedParser(ageRange){
+        	var ageRangeArray = ageRange.split("-");
+        	$scope.selectedDrug.ageRange = ageRangeArray;
+        }
+        
+        $scope.editClick = function(drug) {
+        	$scope.editDrug(drug);
+        	formatAgeRange();
+        }
+        
+        function formatAgeRange(){
+        	$scope.selectedDrug.ageRange = arrayToAgeRange($scope.selectedDrug.ageRange);
+        }
+        
+        function arrayToAgeRange(ageRangeArray){
+        	return ageRangeArray[0] + "-" + ageRangeArray[1];
+        }
 
         // load table initially
         $scope.loadTable();
@@ -125,6 +177,10 @@
 									<thead>
 										<tr>
 											<th>Drug</th>
+											<th>Doses</th>
+											<th>Interval Type</th>
+											<th>Interval</th>
+											<th>Age Range</th>
 											<th>NDC</th>
 											<th>Description</th>
 											<th>Action</th>
@@ -140,12 +196,19 @@
 								<!-- table in view mode -->
 								<script type="text/ng-template" id="view">
                   <td name="nameCell">{{d.name}}</td>
+
+//added these lines below
+
+				  <td name="dosesCell">{{d.numDoses}}</td>
+				  <td name="IntervalTypeCell">{{d.doseInterval['intervalType']}}</td>
+				  <td name="IntervalCell">{{d.doseInterval['intervalAmount']}}</td>
+				  <td name="AgeRangeCell">{{d.ageRange}}</td>
                   <td name="codeCell">{{d.code}}</td>
                   <td name="descriptionCell">{{d.description}}</td>
                   <td>
                     <div class="row text-center">
                       <div class="col-md-6">
-                        <input type="button" value="Edit" class="btn btn-primary" name="editDrug" ng-click="editDrug(d)" />                         
+                        <input type="button" value="Edit" class="btn btn-primary" name="editDrug" ng-click="editClick(d)" />                         
                       </div>
                       <div class="col-md-6">
                           <input type="button" value="Delete" class="btn btn-danger" name="deleteDrug" ng-click="deleteDrug(d)" />                          
@@ -159,6 +222,31 @@
                   <td name="editNameCell">
                     <input type="text" class="form-control" ng-model="selectedDrug.name" />
                   </td>
+
+//added these lines below for edit
+				  <td name="editDosesCell">
+                    <input type="text" class="form-control" ng-model="selectedDrug.numDoses" />
+                  </td>
+
+				  <td>
+					<select class="form-control" name="intervalType" ng-model="selectedDrug.doseInterval['intervalType']">
+																<option value="DAYS">days</option>
+																<option value="WEEKS">weeks</option>
+																<option value="MONTHS">months</option>
+																<option value="YEARS">years</option>
+															</select> 
+				` </td>
+
+				  <td name="editIntervalCell">
+                    <input type="text" class="form-control" ng-model="selectedDrug.doseInterval['intervalAmount']" />
+					
+                  </td>
+				  
+
+				  <td name="editAgeRangeCell">
+                    <input type="text" class="form-control" ng-model="selectedDrug.ageRange" />
+                  </td>
+
                   <td name="editCodeCell">
                     <input type="text" class="form-control" ng-model="selectedDrug.code" />
                   </td>
@@ -181,7 +269,7 @@
 								<div class="row">
 									<div class="col-md-12">
 										<div class="panel panel-default">
-											<div class="panel-heading ">Add a Drug</div>
+											<div class="panel-heading ">Add a Drug or Vaccine</div>
 											<div class="panel-body">
 												<form class="form-horizontal" role="form" name="addDrugForm"
 													ng-submit="addDrug(addDrugForm.$valid)">
@@ -202,6 +290,36 @@
 																name="description" ng-model="drug.description" required
 																ng-minlength="1"></textarea>
 														</div>
+
+														<div class="col-md-4">
+															<label>Doses</label> <input type="text"
+																class="form-control" placeholder="Amount" name="doses"
+																ng-model="drug.numDoses" required />
+														</div>
+
+														<div class="col-md-4">
+															<label>Interval Type</label>
+															<select class="form-control" name="intervalType" ng-model="drug.doseInterval['intervalType']" required>
+																<option value="DAYS">days</option>
+																<option value="WEEKS">weeks</option>
+																<option value="MONTHS">months</option>
+																<option value="YEARS">years</option>
+															</select> 
+														</div>
+
+
+														<div class="col-md-4">
+															<label>Interval</label> <input type="text"
+																class="form-control"
+																name="interval" ng-model="drug.doseInterval['intervalAmount']" required />
+														</div>
+
+														<div class="col-md-4">
+															<label>Age Range</label> <input type="text"
+																class="form-control" placeholder="Age Range"
+																name="range" ng-model="drug.ageRange" required />
+														</div>
+
 													</div>
 													<div class="row">
 														<div class="col-md-12 text-right">

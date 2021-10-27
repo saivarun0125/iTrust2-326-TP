@@ -22,15 +22,12 @@
     		var err = [];
     		if (drug.description.length > 1024) {
     			err.push("Description exceeds character limit of 1024");
-    			console.error("desc. error");
     		}
     		if (drug.name.length > 64) {
     			err.push("Name exceeds the character limit of 64");
-    			console.error("name error");
     		}
     		if (!/^\d{4}-\d{4}-\d{2}$/.test(drug.code)) {
     			err.push("Code must be in the format XXXX-XXXX-XX");
-    			console.error("NDC error");
     		} else {
     			// check if the ndc already exists
     			
@@ -110,12 +107,9 @@
         			// check to make sure that the age range is in format: number-number
             		if (!/\d+-\d+/.test(drug.ageRange)) {
             			err.push("Age Range isn't in the format NUMBER-NUMBER");
-            			console.error("age range error");
             		} else {
-            			console.log("check agerange");
             			
             			var errorCode = validAgeRange(drug.ageRange);
-            			console.log(errorCode);
             			
             			// if the age range is in a valid format, check to make sure the numbers are above 0
             			if (errorCode === 0) {
@@ -163,16 +157,13 @@
         $scope.addDrug = function () {
           $scope.edit = false;
           var err = checkValidDrug($scope.drug);
-          console.log(err);
           if ($scope.isVaccine) {
-        	  console.log("is vaccine");
         	  if ("ageRange" in $scope.drug) {
         		  var oldAgeRange = $scope.drug.ageRange;
                   ageRangeParser($scope.drug.ageRange);
         	  }
         	  
               if (err) {
-            	  console.log("error");
                   $scope.errorAdding = err;
                   if ("ageRange" in $scope.drug)
                   	$scope.drug.ageRange = oldAgeRange;
@@ -316,7 +307,7 @@
         		return 1;
         	
         	// check to make sure that the minimum age is less than the max age
-        	if (ageRangeArray[0] >= ageRangeArray[1])
+        	if (parseInt(ageRangeArray[0]) >= parseInt(ageRangeArray[1]))
         		return 3;
         	
         	return -1;

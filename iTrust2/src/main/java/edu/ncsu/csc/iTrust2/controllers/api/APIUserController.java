@@ -62,7 +62,7 @@ public class APIUserController extends APIController {
 
     /** constant for lab role */
     private static final String       ROLE_OPH        = "ROLE_OPH";
-    
+
     /** Vaccinator role */
     private static final String       ROLE_VACCINATOR = "ROLE_VACCINATOR";
 
@@ -137,9 +137,7 @@ public class APIUserController extends APIController {
             return new ResponseEntity( user, HttpStatus.OK );
         }
         catch ( final Exception e ) {
-            return new ResponseEntity(
-                    errorResponse( "Could not create " + userF.getUsername() + " because of " + e.getMessage() ),
-                    HttpStatus.BAD_REQUEST );
+            return new ResponseEntity( errorResponse( e.getMessage() ), HttpStatus.BAD_REQUEST );
         }
 
     }
@@ -236,7 +234,7 @@ public class APIUserController extends APIController {
 
     /**
      * Generates a set of sample users for the iTrust2 system.
-     * 
+     *
      * @return ResponseEntity indicating that everything is OK
      */
     @PostMapping ( BASE_PATH + "generateUsers" )

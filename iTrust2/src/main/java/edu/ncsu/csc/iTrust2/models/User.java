@@ -186,8 +186,7 @@ public class User extends DomainObject {
     public void setRoles ( final Set<Role> roles ) {
         /* Patient & admin can't have any other roles */
         if ( ( roles.contains( Role.ROLE_PATIENT ) || roles.contains( Role.ROLE_ADMIN ) ) && 1 != roles.size() ) {
-            throw new IllegalArgumentException(
-                    "Tried to create a Patient or Admin user with a secondary role.  Patient & admin can only have a single role!" );
+            throw new IllegalArgumentException( "Patient and admin users can only have a single role." );
         }
 
         this.roles = roles;

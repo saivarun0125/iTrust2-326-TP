@@ -362,6 +362,16 @@
         	$scope.formType = "drug";
         }
         
+        $scope.checkDoses = function() {
+        	if ($scope.drug.numDoses === "1") {
+        		document.getElementById("vaccineIntervalSelect").disabled = true;
+        		document.getElementById("vaccineIntervalAmount").disabled = true;
+        	} else {
+        		document.getElementById("vaccineIntervalSelect").disabled = false;
+        		document.getElementById("vaccineIntervalAmount").disabled = false;
+        	}
+        }
+        
         // load drug form init
         $scope.loadDrugForm();
 
@@ -570,11 +580,12 @@
 														<div class="col-md-4">
 															<label>Doses</label> <input type="text"
 																class="form-control" placeholder="" name="doses"
-																ng-model="$parent.drug.numDoses" required />
+																ng-model="$parent.drug.numDoses"
+																ng-change="checkDoses()" required />
 														</div>
 
 														<div class="col-md-4">
-															<label>Interval Type</label> <select class="form-control"
+															<label>Interval Type</label> <select id="vaccineIntervalSelect" class="form-control"
 																name="intervalType"
 																ng-model="$parent.drug.doseInterval['intervalType']" required>
 																<option value=""></option>
@@ -587,7 +598,7 @@
 
 
 														<div class="col-md-4">
-															<label>Interval Amount</label> <input type="text"
+															<label>Interval Amount</label> <input type="text" id="vaccineIntervalAmount"
 																class="form-control" name="interval"
 																ng-model="$parent.drug.doseInterval['intervalAmount']" required />
 														</div>

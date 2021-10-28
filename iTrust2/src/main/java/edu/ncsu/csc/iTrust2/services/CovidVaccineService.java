@@ -9,6 +9,12 @@ import org.springframework.stereotype.Component;
 import edu.ncsu.csc.iTrust2.models.CovidVaccine;
 import edu.ncsu.csc.iTrust2.repositories.CovidVaccineRepository;
 
+/**
+ * service for CRUD operation on covidvaccine objects
+ *
+ * @author Jack
+ *
+ */
 @Component
 @Transactional
 public class CovidVaccineService extends Service<CovidVaccine, Long> {

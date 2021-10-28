@@ -4,11 +4,23 @@ import java.time.temporal.ChronoUnit;
 
 import javax.persistence.Embeddable;
 
+/**
+ * object that represents a dose interval, used now for vaccines
+ *
+ * @author Jack
+ *
+ */
 @Embeddable
 public class DoseInterval {
 
+    /**
+     * type of the interval
+     */
     private ChronoUnit intervalType;
 
+    /**
+     * amount of the interval
+     */
     private Integer    intervalAmount;
 
     /**
@@ -18,6 +30,15 @@ public class DoseInterval {
 
     }
 
+    /**
+     * construct a dose interval with the provided interval type and interval
+     * amount
+     *
+     * @param intervalType
+     *            interval type to construct with
+     * @param intervalAmount
+     *            interval amount to construct with
+     */
     public DoseInterval ( final ChronoUnit intervalType, final int intervalAmount ) {
         super();
         this.intervalType = intervalType;
@@ -25,6 +46,8 @@ public class DoseInterval {
     }
 
     /**
+     * return the interval type
+     *
      * @return the intervalType
      */
     public ChronoUnit getIntervalType () {
@@ -32,6 +55,8 @@ public class DoseInterval {
     }
 
     /**
+     * set the interval type
+     *
      * @param intervalType
      *            the intervalType to set
      */
@@ -40,6 +65,8 @@ public class DoseInterval {
     }
 
     /**
+     * get the interval amount
+     *
      * @return the intervalAmount
      */
     public int getIntervalAmount () {
@@ -47,6 +74,8 @@ public class DoseInterval {
     }
 
     /**
+     * set the interval amount
+     *
      * @param intervalAmount
      *            the intervalAmount to set
      */

@@ -9,22 +9,46 @@ import javax.validation.constraints.Min;
 
 import edu.ncsu.csc.iTrust2.forms.CovidVaccineForm;
 
+/**
+ * Object that stores state and behavior for a vaccine
+ *
+ * @author Jack
+ *
+ */
 @Entity
 public class CovidVaccine extends Drug {
 
+    /**
+     * number of doses for the vaccine
+     */
     @Min ( 0 )
     private short         numDoses;
 
+    /**
+     * dose interval for the vaccine
+     */
     @Embedded
     private DoseInterval  doseInterval;
 
+    /**
+     * age range for the vaccine
+     */
     @ElementCollection
     private List<Integer> ageRange;
 
+    /**
+     * default constructor for hibernate
+     */
     public CovidVaccine () {
 
     }
 
+    /**
+     * construct covid vaccine from a covid vaccine form
+     *
+     * @param cf
+     *            covid vaccine form to construct from
+     */
     public CovidVaccine ( final CovidVaccineForm cf ) {
         setCode( cf.getCode() );
         setDescription( cf.getDescription() );
@@ -35,6 +59,8 @@ public class CovidVaccine extends Drug {
     }
 
     /**
+     * return the number of doses
+     *
      * @return the numDoses
      */
     public short getNumDoses () {
@@ -42,6 +68,8 @@ public class CovidVaccine extends Drug {
     }
 
     /**
+     * set the number of doses
+     *
      * @param numDoses
      *            the numDoses to set
      */
@@ -50,6 +78,8 @@ public class CovidVaccine extends Drug {
     }
 
     /**
+     * get the dose interval
+     *
      * @return the doseInterval
      */
     public DoseInterval getDoseInterval () {
@@ -57,6 +87,8 @@ public class CovidVaccine extends Drug {
     }
 
     /**
+     * set the dose interval
+     *
      * @param doseInterval
      *            the doseInterval to set
      */
@@ -65,6 +97,8 @@ public class CovidVaccine extends Drug {
     }
 
     /**
+     * get the age range
+     *
      * @return the ageRange
      */
     public List<Integer> getAgeRange () {
@@ -72,6 +106,8 @@ public class CovidVaccine extends Drug {
     }
 
     /**
+     * set the age range
+     *
      * @param ageRange
      *            the ageRange to set
      */

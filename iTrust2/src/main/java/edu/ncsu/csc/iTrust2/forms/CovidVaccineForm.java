@@ -5,11 +5,26 @@ import java.util.List;
 import edu.ncsu.csc.iTrust2.models.CovidVaccine;
 import edu.ncsu.csc.iTrust2.models.DoseInterval;
 
+/**
+ * Form used for frontend data entry
+ *
+ * @author Jack Randle
+ *
+ */
 public class CovidVaccineForm extends DrugForm {
+    /**
+     * number of doses for the vaccine
+     */
     private short         numDoses;
 
+    /**
+     * number of doses required for the vaccine
+     */
     private DoseInterval  doseInterval;
 
+    /**
+     * age range for the vaccine
+     */
     private List<Integer> ageRange;
 
     /**
@@ -21,7 +36,7 @@ public class CovidVaccineForm extends DrugForm {
     /**
      * Constructs a new form with information from the given drug.
      *
-     * @param drug
+     * @param vaccine
      *            the drug object
      */
     public CovidVaccineForm ( final CovidVaccine vaccine ) {
@@ -35,6 +50,8 @@ public class CovidVaccineForm extends DrugForm {
     }
 
     /**
+     * return the number of doses
+     *
      * @return the numDoses
      */
     public short getNumDoses () {
@@ -42,6 +59,8 @@ public class CovidVaccineForm extends DrugForm {
     }
 
     /**
+     * set the number of doses
+     *
      * @param numDoses
      *            the numDoses to set
      */
@@ -50,6 +69,8 @@ public class CovidVaccineForm extends DrugForm {
     }
 
     /**
+     * return the dose interval
+     *
      * @return the doseInterval
      */
     public DoseInterval getDoseInterval () {
@@ -57,6 +78,8 @@ public class CovidVaccineForm extends DrugForm {
     }
 
     /**
+     * set the dose interval
+     *
      * @param doseInterval
      *            the doseInterval to set
      */
@@ -65,6 +88,8 @@ public class CovidVaccineForm extends DrugForm {
     }
 
     /**
+     * get the age range
+     *
      * @return the ageRange
      */
     public List<Integer> getAgeRange () {
@@ -72,6 +97,8 @@ public class CovidVaccineForm extends DrugForm {
     }
 
     /**
+     * set the age range
+     *
      * @param ageRange
      *            the ageRange to set
      */

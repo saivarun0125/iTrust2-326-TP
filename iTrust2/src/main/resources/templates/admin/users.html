@@ -46,7 +46,7 @@
 	        }
 	        
 	        $scope.addUser = function () {
-	        	
+	        	var oldRoles = $scope.user.roles;
 	        	let roles = [];
 	        	
 				for (let [key, value] of Object.entries($scope.user.roles)) {
@@ -58,9 +58,11 @@
 	        	
 		          var err = checkValidUserForm($scope.user);
 		          if (err) {
+		        	$scope.user.roles = oldRoles;
 		            $scope.errorAdding = err;
 		            $scope.successMessage = "";
 		          } else {
+		        	 console.log($scope.user);
 		            $http.post("/iTrust2/api/v1/users", $scope.user).then(
 		              function (response) {
 		            	    $scope.loadUsers();

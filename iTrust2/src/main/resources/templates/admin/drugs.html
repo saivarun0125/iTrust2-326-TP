@@ -105,7 +105,7 @@
         		// check to make sure age range is defined
         		if ("ageRange" in drug) {
         			// check to make sure that the age range is in format: number-number
-            		if (!/\d+-\d+/.test(drug.ageRange)) {
+            		if (!/^\d+-\d+$/.test(drug.ageRange)) {
             			err.push("Age Range isn't in the format NUMBER-NUMBER");
             		} else {
             			

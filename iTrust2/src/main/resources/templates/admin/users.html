@@ -17,13 +17,18 @@
 						    err.push("Username already exists.");
 						}
 					}
+					
+					if( !/^[A-Za-z0-9_-]{6,20}$/.test($scope.user.username))
+						err.push("Username must be between 6 and 20 alpha characters and symbols - or _")
+					
 	       	        if( $scope.user.password === $scope.user.password2) {
 					    // do nothing
 					} else {
 						err.push("Passwords do not match." );
 					}
-	 				if( $scope.user.password.length < 6)
-	 					err.push("Password must be more than 6 characters long.");
+	 				if( $scope.user.password.length < 6 || $scope.user.password.length > 20)
+	 					err.push("Password must be between 6 and 20 characters");
+	 				
 					return err.join(".  ");
 				}
 				

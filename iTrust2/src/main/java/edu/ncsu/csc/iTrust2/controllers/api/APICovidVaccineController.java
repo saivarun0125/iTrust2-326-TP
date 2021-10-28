@@ -51,21 +51,21 @@ public class APICovidVaccineController extends APIController {
     @PostMapping ( BASE_PATH + "/CovidVaccines" )
     public ResponseEntity addCovidVaccine ( @RequestBody final CovidVaccineForm form ) {
         try {
-            final CovidVaccine CovidVaccine = new CovidVaccine( form );
+            final CovidVaccine covidVaccine = new CovidVaccine( form );
 
             // Make sure code does not conflict with existing CovidVaccines
-            if ( service.existsByCode( CovidVaccine.getCode() ) ) {
+            if ( service.existsByCode( covidVaccine.getCode() ) ) {
                 loggerUtil.log( TransactionType.COVID_VACCINE_CREATE, LoggerUtil.currentUser(),
-                        "Conflict: Covid Vaccine with code " + CovidVaccine.getCode() + " already exists" );
+                        "Conflict: Covid Vaccine with code " + covidVaccine.getCode() + " already exists" );
                 return new ResponseEntity(
-                        errorResponse( "Covid Vaccine with code " + CovidVaccine.getCode() + " already exists" ),
+                        errorResponse( "Covid Vaccine with code " + covidVaccine.getCode() + " already exists" ),
                         HttpStatus.CONFLICT );
             }
 
-            service.save( CovidVaccine );
+            service.save( covidVaccine );
             loggerUtil.log( TransactionType.COVID_VACCINE_CREATE, LoggerUtil.currentUser(),
-                    "Covid Vaccine " + CovidVaccine.getCode() + " created" );
-            return new ResponseEntity( CovidVaccine, HttpStatus.OK );
+                    "Covid Vaccine " + covidVaccine.getCode() + " created" );
+            return new ResponseEntity( covidVaccine, HttpStatus.OK );
         }
         catch ( final Exception e ) {
             loggerUtil.log( TransactionType.COVID_VACCINE_CREATE, LoggerUtil.currentUser(),
@@ -133,16 +133,16 @@ public class APICovidVaccineController extends APIController {
     @DeleteMapping ( BASE_PATH + "/CovidVaccines/{id}" )
     public ResponseEntity deleteCovidVaccine ( @PathVariable final String id ) {
         try {
-            final CovidVaccine CovidVaccine = service.findById( Long.parseLong( id ) );
-            if ( CovidVaccine == null ) {
+            final CovidVaccine covidVaccine = service.findById( Long.parseLong( id ) );
+            if ( covidVaccine == null ) {
                 loggerUtil.log( TransactionType.COVID_VACCINE_DELETE, LoggerUtil.currentUser(),
                         "Could not find Covid Vaccine with id " + id );
                 return new ResponseEntity( errorResponse( "No Covid Vaccine found with id " + id ),
                         HttpStatus.NOT_FOUND );
             }
-            service.delete( CovidVaccine );
+            service.delete( covidVaccine );
             loggerUtil.log( TransactionType.COVID_VACCINE_DELETE, LoggerUtil.currentUser(),
-                    "Deleted Covid Vaccine with id " + CovidVaccine.getId() );
+                    "Deleted Covid Vaccine with id " + covidVaccine.getId() );
             return new ResponseEntity( id, HttpStatus.OK );
         }
         catch ( final Exception e ) {

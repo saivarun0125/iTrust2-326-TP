@@ -1,5 +1,6 @@
 package edu.ncsu.csc.iTrust2.api;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -7,6 +8,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.transaction.Transactional;
@@ -28,6 +31,8 @@ import org.springframework.web.context.WebApplicationContext;
 import edu.ncsu.csc.iTrust2.common.TestUtils;
 import edu.ncsu.csc.iTrust2.forms.UserForm;
 import edu.ncsu.csc.iTrust2.forms.VaccineAppointmentRequestForm;
+import edu.ncsu.csc.iTrust2.models.CovidVaccine;
+import edu.ncsu.csc.iTrust2.models.DoseInterval;
 import edu.ncsu.csc.iTrust2.models.Patient;
 import edu.ncsu.csc.iTrust2.models.Personnel;
 import edu.ncsu.csc.iTrust2.models.User;
@@ -35,16 +40,17 @@ import edu.ncsu.csc.iTrust2.models.VaccineAppointmentRequest;
 import edu.ncsu.csc.iTrust2.models.enums.AppointmentType;
 import edu.ncsu.csc.iTrust2.models.enums.Role;
 import edu.ncsu.csc.iTrust2.models.enums.Status;
+import edu.ncsu.csc.iTrust2.services.CovidVaccineService;
 import edu.ncsu.csc.iTrust2.services.UserService;
 import edu.ncsu.csc.iTrust2.services.VaccineAppointmentRequestService;
 
 /**
- * Test for the API functionality for interacting with vaccine
- * appointment requests
+ * Test for the API functionality for interacting with vaccine appointment
+ * requests
  *
  * @author Kai Presler-Marshall
  * @author Matt Dzwonczyk
- * 
+ *
  * @author Weston Greene
  */
 @RunWith ( SpringRunner.class )
@@ -52,16 +58,19 @@ import edu.ncsu.csc.iTrust2.services.VaccineAppointmentRequestService;
 @AutoConfigureMockMvc
 public class APIVaccineAppointmentRequestTest {
 
-    private MockMvc                   mvc;
+    private MockMvc                          mvc;
 
     @Autowired
-    private WebApplicationContext     context;
+    private WebApplicationContext            context;
 
     @Autowired
     private VaccineAppointmentRequestService arService;
 
     @Autowired
-    private UserService               service;
+    private UserService                      service;
+
+    @Autowired
+    private CovidVaccineService              covidVaccineService;
 
     /**
      * Sets up tests
@@ -77,11 +86,22 @@ public class APIVaccineAppointmentRequestTest {
 
         service.saveAll( List.of( patient, hcp ) );
 
+        final CovidVaccine covidVaccine = new CovidVaccine();
+        final ArrayList<Integer> vaxAgeRange = new ArrayList<Integer>();
+        vaxAgeRange.add( 0, 0 );
+        vaxAgeRange.add( 1, 100 );
+        covidVaccine.setAgeRange( vaxAgeRange );
+        covidVaccine.setCode( "1111-1111-11" );
+        covidVaccine.setDescription( "desc" );
+        covidVaccine.setDoseInterval( new DoseInterval( ChronoUnit.CENTURIES, 100 ) );
+        covidVaccine.setName( "test vaccine" );
+        covidVaccine.setNumDoses( (short) 2 );
+        covidVaccineService.save( covidVaccine );
     }
 
     /**
-     * Tests that getting a vaccine appointment that doesn't
-     * exist returns the proper status
+     * Tests that getting a vaccine appointment that doesn't exist returns the
+     * proper status
      *
      * @throws Exception
      */
@@ -93,8 +113,8 @@ public class APIVaccineAppointmentRequestTest {
     }
 
     /**
-     * Tests that deleting a vaccine appointment that doesn't
-     * exist returns the proper status.
+     * Tests that deleting a vaccine appointment that doesn't exist returns the
+     * proper status.
      */
     @Test
     @WithMockUser ( username = "hcp", roles = { "HCP" } )
@@ -104,8 +124,8 @@ public class APIVaccineAppointmentRequestTest {
     }
 
     /**
-     * Tests creating a vaccine appointment request with bad
-     * data. Should return a bad request.
+     * Tests creating a vaccine appointment request with bad data. Should return
+     * a bad request.
      *
      * @throws Exception
      */
@@ -140,13 +160,14 @@ public class APIVaccineAppointmentRequestTest {
 
         final VaccineAppointmentRequestForm vaccineAppointmentForm = new VaccineAppointmentRequestForm();
         vaccineAppointmentForm.setDate( "2030-11-19T04:50:00.000-05:00" ); // 2030-11-19
-                                                                    // 4:50 AM
-                                                                    // EST
+        // 4:50 AM
+        // EST
         vaccineAppointmentForm.setType( AppointmentType.GENERAL_CHECKUP.toString() );
         vaccineAppointmentForm.setStatus( Status.PENDING.toString() );
         vaccineAppointmentForm.setHcp( "hcp" );
         vaccineAppointmentForm.setPatient( "patient" );
         vaccineAppointmentForm.setComments( "Test appointment please ignore" );
+        vaccineAppointmentForm.setVaccine( "1111-1111-11" );
 
         /* Create the request */
         mvc.perform( post( "/api/v1/vaccineappointmentrequests" ).contentType( MediaType.APPLICATION_JSON )
@@ -154,6 +175,8 @@ public class APIVaccineAppointmentRequestTest {
 
         mvc.perform( get( "/api/v1/vaccineappointmentrequest" ) ).andExpect( status().isOk() )
                 .andExpect( content().contentType( MediaType.APPLICATION_JSON_VALUE ) );
+
+        assertEquals( 1, arService.count() );
 
         List<VaccineAppointmentRequest> forPatient = arService.findAll();
         Assert.assertEquals( 1, forPatient.size() );
@@ -168,7 +191,7 @@ public class APIVaccineAppointmentRequestTest {
                 .andExpect( content().contentType( MediaType.APPLICATION_JSON_VALUE ) );
 
         vaccineAppointmentForm.setDate( "2030-11-19T03:30:00.000-05:00" ); // 2030-11-19
-                                                                    // 3:30 AM
+        // 3:30 AM
 
         mvc.perform( put( "/api/v1/vaccineappointmentrequests/" + id ).contentType( MediaType.APPLICATION_JSON )
                 .content( TestUtils.asJsonString( vaccineAppointmentForm ) ) ).andExpect( status().isOk() )

@@ -14,7 +14,7 @@ public class VaccineAppointmentRequestForm extends AppointmentRequestForm {
 
     /** The covid vaccine of the appt request */
     @NotNull ( message = "Invalid Vaccine" )
-    private String CovidVaccine;
+    private String covidVaccine;
 
     /**
      * Don't use this one. For Hibernate/Thymeleaf
@@ -28,7 +28,7 @@ public class VaccineAppointmentRequestForm extends AppointmentRequestForm {
      *
      * @param request
      *            covid vaccine appointment request to populate form
-     * 
+     *
      */
     public VaccineAppointmentRequestForm ( final VaccineAppointmentRequest request ) {
         super( request );
@@ -41,7 +41,7 @@ public class VaccineAppointmentRequestForm extends AppointmentRequestForm {
      * @return CovidVaccine
      */
     public String getVaccine () {
-        return CovidVaccine;
+        return covidVaccine;
     }
 
     /**
@@ -49,10 +49,10 @@ public class VaccineAppointmentRequestForm extends AppointmentRequestForm {
      *
      * @param vaccine
      *            that is set
-     * 
+     *
      */
     public void setVaccine ( final String vaccine ) {
-        this.CovidVaccine = vaccine;
+        this.covidVaccine = vaccine;
     }
 
 }

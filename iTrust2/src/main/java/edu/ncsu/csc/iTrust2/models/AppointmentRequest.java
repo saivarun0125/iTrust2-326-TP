@@ -92,16 +92,6 @@ public class AppointmentRequest extends DomainObject {
     }
 
     /**
-     * Returns the id of the AppointmentRequest
-     *
-     * @return ID of the AppointmentRequest
-     */
-    @Override
-    public Long getId () {
-        return this.id;
-    }
-
-    /**
      * Sets the ID of the AppointmentRequest
      *
      * @param id
@@ -109,6 +99,16 @@ public class AppointmentRequest extends DomainObject {
      */
     public void setId ( final Long id ) {
         this.id = id;
+    }
+
+    /**
+     * Returns the id of the AppointmentRequest
+     *
+     * @return ID of the AppointmentRequest
+     */
+    @Override
+    public Long getId () {
+        return this.id;
     }
 
     /**

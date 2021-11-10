@@ -98,7 +98,7 @@ public class VaccineAppointmentRequestService extends Service<VaccineAppointment
 
         ar.setPatient( userService.findByName( raf.getPatient() ) );
         ar.setHcp( userService.findByName( raf.getHcp() ) );
-        final CovidVaccine vaccine = vaccineService.findByCode( raf.getVaccine() );
+
         ar.setComments( raf.getComments() );
 
         final ZonedDateTime requestDate = ZonedDateTime.parse( raf.getDate() );
@@ -106,6 +106,8 @@ public class VaccineAppointmentRequestService extends Service<VaccineAppointment
             throw new IllegalArgumentException( "Cannot request an appointment before the current time" );
         }
         ar.setDate( requestDate );
+        final CovidVaccine vaccine = repos.findByCode( raf.getVaccine() );
+        ar.setVaccine( vaccine );
 
         ar.setVaccine( vaccine );
 

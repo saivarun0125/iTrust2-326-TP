@@ -42,6 +42,10 @@ public class VaccineAppointmentRequestService extends Service<VaccineAppointment
     @Autowired
     private UserService<User>                   userService;
 
+    /** VaccineService for CRUD operations on Vaccines */
+    @Autowired
+    private CovidVaccineService                 vaccineService;
+
     @Override
     protected JpaRepository<VaccineAppointmentRequest, Long> getRepository () {
         return repository;
@@ -103,6 +107,8 @@ public class VaccineAppointmentRequestService extends Service<VaccineAppointment
         }
         ar.setDate( requestDate );
         final CovidVaccine vaccine = repos.findByCode( raf.getVaccine() );
+        ar.setVaccine( vaccine );
+
         ar.setVaccine( vaccine );
 
         Status s = null;

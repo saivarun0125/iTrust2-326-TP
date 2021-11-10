@@ -117,7 +117,7 @@ public class VaccineAppointmentRequestTest {
         request.setHcp( hcp );
 
         final VaccineAppointmentRequestForm vform = new VaccineAppointmentRequestForm( request );
-        assertEquals( vform.getVaccine(), vaccine.getName() );
+        assertEquals( vform.getVaccine(), vaccine.getCode() );
         assertEquals( vform.getHcp(), "hcp" );
     }
 

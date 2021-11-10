@@ -33,7 +33,7 @@ import edu.ncsu.csc.iTrust2.utils.LoggerUtil;
  *
  * @author Kai Presler-Marshall
  * @author Matt Dzwonczyk
- * 
+ *
  * @author Weston Greene
  */
 @RestController
@@ -48,11 +48,11 @@ public class APIVaccineAppointmentRequestController extends APIController {
 
     /** LoggerUtil */
     @Autowired
-    private LoggerUtil                loggerUtil;
+    private LoggerUtil                       loggerUtil;
 
     /** User service */
     @Autowired
-    private UserService<User>         userService;
+    private UserService<User>                userService;
 
     /**
      * Retrieves a list of all VaccineAppointmentRequests in the database
@@ -71,7 +71,8 @@ public class APIVaccineAppointmentRequestController extends APIController {
     }
 
     /**
-     * Retrieves the VaccineAppointmentRequests specified by the username provided
+     * Retrieves the VaccineAppointmentRequests specified by the username
+     * provided
      *
      * @return list of vaccine appointment requests for the logged in patient
      */
@@ -84,7 +85,8 @@ public class APIVaccineAppointmentRequestController extends APIController {
     }
 
     /**
-     * Retrieves the VaccineAppointmentRequests specified by the username provided
+     * Retrieves the VaccineAppointmentRequests specified by the username
+     * provided
      *
      * @return list of appointment requests for the logged in HCP
      */
@@ -127,10 +129,10 @@ public class APIVaccineAppointmentRequestController extends APIController {
     }
 
     /**
-     * Creates an VaccineAppointmentRequest from the RequestBody provided. Record is
-     * automatically saved in the database.
+     * Creates an VaccineAppointmentRequest from the RequestBody provided.
+     * Record is automatically saved in the database.
      *
-     * @param vaccinerequestForm
+     * @param vaccineRequestForm
      *            The VaccineAppointmentRequestForm to be parsed into an
      *            VaccineAppointmentRequest and stored
      * @return The parsed and validated AppointmentRequest created from the Form
@@ -141,7 +143,8 @@ public class APIVaccineAppointmentRequestController extends APIController {
      */
     @PostMapping ( BASE_PATH + "/vaccineappointmentrequests" )
     @PreAuthorize ( "hasRole('ROLE_PATIENT')" )
-    public ResponseEntity createVaccineAppointmentRequest ( @RequestBody final VaccineAppointmentRequestForm vaccineRequestForm ) {
+    public ResponseEntity createVaccineAppointmentRequest (
+            @RequestBody final VaccineAppointmentRequestForm vaccineRequestForm ) {
         try {
             final VaccineAppointmentRequest request = service.build( vaccineRequestForm );
             if ( null != service.findById( request.getId() ) ) {
@@ -160,8 +163,8 @@ public class APIVaccineAppointmentRequestController extends APIController {
     }
 
     /**
-     * Deletes the VaccineAppointmentRequest with the id provided. This will remove all
-     * traces from the system and cannot be reversed.
+     * Deletes the VaccineAppointmentRequest with the id provided. This will
+     * remove all traces from the system and cannot be reversed.
      *
      * @param id
      *            The id of the VaccineAppointmentRequest to delete
@@ -195,18 +198,18 @@ public class APIVaccineAppointmentRequestController extends APIController {
     }
 
     /**
-     * Updates the VaccineAppointmentRequest with the id provided by overwriting it
-     * with the new VaccineAppointmentRequest that is provided. If the ID provided does
-     * not match the ID set in the VaccineAppointmentRequest provided, the update will
-     * not take place
+     * Updates the VaccineAppointmentRequest with the id provided by overwriting
+     * it with the new VaccineAppointmentRequest that is provided. If the ID
+     * provided does not match the ID set in the VaccineAppointmentRequest
+     * provided, the update will not take place
      *
      * @param id
      *            The ID of the VaccineAppointmentRequest to be updated
      * @param requestF
-     *            The updated VaccineAppointmentRequestForm to parse, validate, and
-     *            save
-     * @return The VaccineAppointmentRequest that is created from the Form that is
-     *         provided
+     *            The updated VaccineAppointmentRequestForm to parse, validate,
+     *            and save
+     * @return The VaccineAppointmentRequest that is created from the Form that
+     *         is provided
      */
     @PutMapping ( BASE_PATH + "/vaccineappointmentrequests/{id}" )
     @PreAuthorize ( "hasAnyRole('ROLE_HCP', 'ROLE_PATIENT')" )
@@ -254,8 +257,8 @@ public class APIVaccineAppointmentRequestController extends APIController {
     }
 
     /**
-     * View VaccineAppointments will retrieve and display all appointments for the
-     * logged-in HCP that are in "approved" status
+     * View VaccineAppointments will retrieve and display all appointments for
+     * the logged-in HCP that are in "approved" status
      *
      *
      * @return The page to display for the user

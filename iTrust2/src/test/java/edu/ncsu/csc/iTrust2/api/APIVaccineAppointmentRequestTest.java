@@ -8,6 +8,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
@@ -81,7 +82,9 @@ public class APIVaccineAppointmentRequestTest {
         service.deleteAll();
         arService.deleteAll();
 
-        final User patient = new Patient( new UserForm( "patient", "123456", Role.ROLE_PATIENT, 1 ) );
+        final User user = new Patient( new UserForm( "patient", "123456", Role.ROLE_PATIENT, 1 ) );
+        final Patient patient = (Patient) user;
+        patient.setDateOfBirth( LocalDate.now().minusYears( 20 ) );
         final User hcp = new Personnel( new UserForm( "hcp", "123456", Role.ROLE_HCP, 1 ) );
 
         service.saveAll( List.of( patient, hcp ) );
@@ -156,6 +159,8 @@ public class APIVaccineAppointmentRequestTest {
     @Transactional
     public void testVaccineAppointmentRequestAPI () throws Exception {
 
+        final CovidVaccine vaccine = covidVaccineService.findByCode( "1111-1111-11" );
+
         final User patient = service.findByName( "patient" );
 
         final VaccineAppointmentRequestForm vaccineAppointmentForm = new VaccineAppointmentRequestForm();
@@ -167,7 +172,9 @@ public class APIVaccineAppointmentRequestTest {
         vaccineAppointmentForm.setHcp( "hcp" );
         vaccineAppointmentForm.setPatient( "patient" );
         vaccineAppointmentForm.setComments( "Test appointment please ignore" );
-        vaccineAppointmentForm.setVaccine( "1111-1111-11" );
+        vaccineAppointmentForm.setVaccine( vaccine.getCode() );
+
+        System.out.println( TestUtils.asJsonString( vaccineAppointmentForm ) );
 
         /* Create the request */
         mvc.perform( post( "/api/v1/vaccineappointmentrequests" ).contentType( MediaType.APPLICATION_JSON )

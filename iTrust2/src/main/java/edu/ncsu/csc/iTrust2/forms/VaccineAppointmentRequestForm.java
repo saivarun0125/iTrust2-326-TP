@@ -1,6 +1,6 @@
 package edu.ncsu.csc.iTrust2.forms;
 
-import javax.validation.constraints.NotNull;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import edu.ncsu.csc.iTrust2.models.VaccineAppointmentRequest;
 
@@ -13,8 +13,8 @@ import edu.ncsu.csc.iTrust2.models.VaccineAppointmentRequest;
 public class VaccineAppointmentRequestForm extends AppointmentRequestForm {
 
     /** The covid vaccine of the appt request */
-    @NotNull ( message = "Invalid Vaccine" )
-    private String covidVaccine;
+    @JsonProperty ( "vaccine" )
+    private String vaccine;
 
     /**
      * Don't use this one. For Hibernate/Thymeleaf
@@ -32,7 +32,7 @@ public class VaccineAppointmentRequestForm extends AppointmentRequestForm {
      */
     public VaccineAppointmentRequestForm ( final VaccineAppointmentRequest request ) {
         super( request );
-        setVaccine( request.getVaccine().getName() );
+        setVaccine( request.getVaccine().getCode() );
     }
 
     /**
@@ -41,7 +41,7 @@ public class VaccineAppointmentRequestForm extends AppointmentRequestForm {
      * @return CovidVaccine
      */
     public String getVaccine () {
-        return covidVaccine;
+        return vaccine;
     }
 
     /**
@@ -52,7 +52,8 @@ public class VaccineAppointmentRequestForm extends AppointmentRequestForm {
      *
      */
     public void setVaccine ( final String vaccine ) {
-        this.covidVaccine = vaccine;
+        System.out.println( vaccine );
+        this.vaccine = vaccine;
     }
 
 }

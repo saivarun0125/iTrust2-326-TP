@@ -11,6 +11,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Component;
 
 import edu.ncsu.csc.iTrust2.forms.VaccineAppointmentRequestForm;
+import edu.ncsu.csc.iTrust2.models.CovidVaccine;
 import edu.ncsu.csc.iTrust2.models.User;
 import edu.ncsu.csc.iTrust2.models.VaccineAppointmentRequest;
 import edu.ncsu.csc.iTrust2.models.enums.AppointmentType;
@@ -93,7 +94,7 @@ public class VaccineAppointmentRequestService extends Service<VaccineAppointment
 
         ar.setPatient( userService.findByName( raf.getPatient() ) );
         ar.setHcp( userService.findByName( raf.getHcp() ) );
-        ar.setVaccine( repos.findByCode( raf.getVaccine() ) );
+
         ar.setComments( raf.getComments() );
 
         final ZonedDateTime requestDate = ZonedDateTime.parse( raf.getDate() );
@@ -101,6 +102,8 @@ public class VaccineAppointmentRequestService extends Service<VaccineAppointment
             throw new IllegalArgumentException( "Cannot request an appointment before the current time" );
         }
         ar.setDate( requestDate );
+        final CovidVaccine vaccine = repos.findByCode( raf.getVaccine() );
+        ar.setVaccine( vaccine );
 
         Status s = null;
         try {

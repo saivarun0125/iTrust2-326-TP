@@ -50,13 +50,11 @@ public class VaccineAppointmentRequest extends AppointmentRequest {
      *            that is set
      */
     public void setVaccine ( final CovidVaccine vaccine ) {
-        if ( validAgeRange( vaccine ) ) {
-            this.vaccine = vaccine;
-        }
+        validAgeRange( vaccine );
 
     }
 
-    private boolean validAgeRange ( final CovidVaccine vaccine ) {
+    private void validAgeRange ( final CovidVaccine vaccine ) {
         final Patient patient = (Patient) super.getPatient();
         final LocalDate dateOfBirthDate = patient.getDateOfBirth();
         final LocalDate dateOfAppointment = super.getDate().toLocalDate();
@@ -67,7 +65,7 @@ public class VaccineAppointmentRequest extends AppointmentRequest {
                 || period.getYears() > vaccine.getAgeRange().get( 1 ) ) {
             throw new IllegalArgumentException( "User does not meet age requirement for vaccine" );
         }
-        return true;
+        this.vaccine = vaccine;
 
     }
 

@@ -135,7 +135,13 @@ public class APIVaccineOfficeVisitController extends APIController {
                 vaccineOfficeVisitService.save( visit );
                 loggerUtil.log( TransactionType.VACCINE_OFFICE_VISIT_CREATE, LoggerUtil.currentUser(),
                         visit.getPatient().getUsername() );
-                patient.getVaccinesRecieved().add( visit.getVaccine() );
+                final CovidVaccine vax = visit.getVaccine();
+                // We do this so we don't get duplicates in a patient's
+                // vaccination list.
+                final CovidVaccine vaxToAdd = new CovidVaccine( vax.getCode(), vax.getDescription(), vax.getName(),
+                        (short) visit.getDoseNumber().intValue(), vax.getDoseInterval(), vax.getAgeRange().get( 0 ),
+                        vax.getAgeRange().get( 1 ) );
+                patient.getVaccinesRecieved().add( vaxToAdd );
                 userService.save( patient );
 
                 return new ResponseEntity( visit, HttpStatus.OK );
@@ -186,7 +192,7 @@ public class APIVaccineOfficeVisitController extends APIController {
         // that list.
         final ArrayList<CovidVaccine> vaccinesRecieved = new ArrayList<CovidVaccine>();
         for ( final CovidVaccine vaccine : patient.getVaccinesRecieved() ) {
-            if ( vaccine.getClass().getName().equals( "CovidVaccine" ) ) {
+            if ( vaccine.getClass().getName().equals( "edu.ncsu.csc.iTrust2.models.CovidVaccine" ) ) {
                 vaccinesRecieved.add( vaccine );
             }
         }
@@ -247,7 +253,13 @@ public class APIVaccineOfficeVisitController extends APIController {
                 vaccineOfficeVisitService.save( visit );
                 loggerUtil.log( TransactionType.VACCINE_OFFICE_VISIT_CREATE, LoggerUtil.currentUser(),
                         visit.getPatient().getUsername() );
-                patient.getVaccinesRecieved().add( visit.getVaccine() );
+                final CovidVaccine vax = visit.getVaccine();
+                // We do this so we don't get duplicates in a patient's
+                // vaccination list.
+                final CovidVaccine vaxToAdd = new CovidVaccine( vax.getCode(), vax.getDescription(), vax.getName(),
+                        (short) visit.getDoseNumber().intValue(), vax.getDoseInterval(), vax.getAgeRange().get( 0 ),
+                        vax.getAgeRange().get( 1 ) );
+                patient.getVaccinesRecieved().add( vaxToAdd );
                 return new ResponseEntity( visit, HttpStatus.OK );
             }
             // otherwise, return an appropriate response

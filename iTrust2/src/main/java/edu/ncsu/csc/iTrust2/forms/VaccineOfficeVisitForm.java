@@ -2,7 +2,6 @@ package edu.ncsu.csc.iTrust2.forms;
 
 import javax.validation.constraints.NotEmpty;
 
-import edu.ncsu.csc.iTrust2.models.CovidVaccine;
 import edu.ncsu.csc.iTrust2.models.VaccineAppointmentRequest;
 import edu.ncsu.csc.iTrust2.models.VaccineOfficeVisit;
 
@@ -20,7 +19,7 @@ public class VaccineOfficeVisitForm extends OfficeVisitForm {
     private static final long         serialVersionUID = 1L;
 
     /** The vaccine field for the vaccine office visit */
-    private CovidVaccine              vaccine;
+    private String                    vaccine;
 
     /** Which dose of the vaccine this is */
     @NotEmpty
@@ -48,7 +47,7 @@ public class VaccineOfficeVisitForm extends OfficeVisitForm {
     public VaccineOfficeVisitForm ( final VaccineOfficeVisit ov ) {
         super( ov );
         setScheduled( ov.isScheduled() );
-        setVaccine( ov.getVaccine() );
+        setVaccine( ov.getVaccine().getCode() );
         setDoseNumber( ov.getDoseNumber() );
         setAppointment( ov.getAppointment() );
     }
@@ -78,7 +77,7 @@ public class VaccineOfficeVisitForm extends OfficeVisitForm {
      * @param vaccine
      *            - the vaccine to set
      */
-    public void setVaccine ( final CovidVaccine vaccine ) {
+    public void setVaccine ( final String vaccine ) {
         this.vaccine = vaccine;
     }
 
@@ -87,7 +86,7 @@ public class VaccineOfficeVisitForm extends OfficeVisitForm {
      *
      * @return the associated vaccine
      */
-    public CovidVaccine getVaccine () {
+    public String getVaccine () {
         return vaccine;
     }
 

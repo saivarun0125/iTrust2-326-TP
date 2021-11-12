@@ -138,7 +138,7 @@ public class VaccineOfficeVisitService extends Service<VaccineOfficeVisit, Long>
         ov.setNotes( ovf.getNotes() );
         ov.setDoseNumber( ovf.getDoseNumber() );
         ov.setScheduled( ovf.isScheduled() );
-        ov.setVaccine( covidVaccineService.findByCode( ovf.getVaccine().getCode() ) );
+        ov.setVaccine( covidVaccineService.findByCode( ovf.getVaccine() ) );
 
         ov.validateDoseNumber();
         ov.validateVaccine();

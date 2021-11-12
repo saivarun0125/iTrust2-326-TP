@@ -54,6 +54,7 @@ public class VaccineOfficeVisitTest {
     @Autowired
     private HospitalService           hospitalService;
 
+    @SuppressWarnings ( "rawtypes" )
     @Autowired
     private UserService               userService;
 
@@ -66,6 +67,7 @@ public class VaccineOfficeVisitTest {
     // @Autowired
     // private PrescriptionService prescriptionService;
 
+    @SuppressWarnings ( "unchecked" )
     @Before
     public void setup () {
         vaccineOfficeVisitService.deleteAll();
@@ -109,7 +111,7 @@ public class VaccineOfficeVisitTest {
         visit.setType( AppointmentType.VACCINE_APPOINTMENT );
         visit.setHospital( hosp );
         visit.setPatient( userService.findByName( "AliceThirteen" ) );
-        visit.setHcp( userService.findByName( "AliceThirteen" ) );
+        visit.setHcp( userService.findByName( "hcp" ) );
         visit.setDate( ZonedDateTime.now() );
         visit.setVaccine( vaccine );
         visit.setDoseNumber( 1 );
@@ -149,6 +151,10 @@ public class VaccineOfficeVisitTest {
         retrieved = vaccineOfficeVisitService.findAll().get( 0 );
 
         Assert.assertEquals( "Johnson and Johnson COVID19 Vaccine", retrieved.getVaccine().getName() );
+        Assert.assertEquals( "AliceThirteen", retrieved.getPatient().getUsername() );
+        Assert.assertEquals( hosp.toString(), retrieved.getHospital().toString() );
+        Assert.assertEquals( retrieved.getVaccine().toString(), vaccine2.toString() );
+        Assert.assertEquals( retrieved.getHcp().getUsername(), "hcp" );
 
         // some error testing with null fields
 
@@ -218,7 +224,7 @@ public class VaccineOfficeVisitTest {
         visit.setType( AppointmentType.VACCINE_APPOINTMENT );
         visit.setHospital( hosp );
         visit.setPatient( userService.findByName( "AliceThirteen" ) );
-        visit.setHcp( userService.findByName( "AliceThirteen" ) );
+        visit.setHcp( userService.findByName( "hcp" ) );
         visit.setDate( ZonedDateTime.now() );
         visit.setVaccine( vaccine );
         visit.setDoseNumber( 1 );

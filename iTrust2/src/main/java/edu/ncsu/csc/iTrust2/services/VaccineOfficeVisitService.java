@@ -20,6 +20,7 @@ import edu.ncsu.csc.iTrust2.models.enums.AppointmentType;
 import edu.ncsu.csc.iTrust2.repositories.VaccineOfficeVisitRepository;
 
 /**
+ * Like the OfficeVisitService class, but specifically for VaccineOfficeVisit.
  *
  * @author Kon Buchanan
  *
@@ -34,11 +35,11 @@ public class VaccineOfficeVisitService extends Service<VaccineOfficeVisit, Long>
     @Autowired
     private VaccineOfficeVisitRepository     repository;
 
-    /**
-     * User service
-     */
-    @Autowired
-    private UserService<User>                userService;
+    // /**
+    // * User service
+    // */
+    // @Autowired
+    // private UserService<User> userService;
 
     /**
      * AppointmentRequest service
@@ -46,35 +47,35 @@ public class VaccineOfficeVisitService extends Service<VaccineOfficeVisit, Long>
     @Autowired
     private VaccineAppointmentRequestService vaccineAppointmentRequestService;
 
-    /**
-     * Hospital Service
-     */
-    @Autowired
-    private HospitalService                  hospitalService;
-
-    /**
-     * BasicHealthMetrics service
-     */
-    @Autowired
-    private BasicHealthMetricsService        bhmService;
-
-    /**
-     * OphthalmologyMetrics service
-     */
-    @Autowired
-    private OphthalmologyMetricsService      omService;
-
-    /**
-     * Prescription service
-     */
-    @Autowired
-    private PrescriptionService              prescriptionService;
-
-    /**
-     * Diagnosis service
-     */
-    @Autowired
-    private DiagnosisService                 diagnosisService;
+    // /**
+    // * Hospital Service
+    // */
+    // @Autowired
+    // private HospitalService hospitalService;
+    //
+    // /**
+    // * BasicHealthMetrics service
+    // */
+    // @Autowired
+    // private BasicHealthMetricsService bhmService;
+    //
+    // /**
+    // * OphthalmologyMetrics service
+    // */
+    // @Autowired
+    // private OphthalmologyMetricsService omService;
+    //
+    // /**
+    // * Prescription service
+    // */
+    // @Autowired
+    // private PrescriptionService prescriptionService;
+    //
+    // /**
+    // * Diagnosis service
+    // */
+    // @Autowired
+    // private DiagnosisService diagnosisService;
 
     @Override
     protected JpaRepository<VaccineOfficeVisit, Long> getRepository () {
@@ -223,6 +224,9 @@ public class VaccineOfficeVisitService extends Service<VaccineOfficeVisit, Long>
         else {
             ov.validate12AndOver();
         }
+
+        ov.validateDoseNumber();
+        ov.validateVaccine();
 
         return ov;
     }

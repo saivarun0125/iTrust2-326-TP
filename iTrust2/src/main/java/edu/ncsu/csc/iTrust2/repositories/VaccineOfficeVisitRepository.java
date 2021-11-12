@@ -8,6 +8,7 @@ import edu.ncsu.csc.iTrust2.models.User;
 import edu.ncsu.csc.iTrust2.models.VaccineOfficeVisit;
 
 /**
+ * Like the OfficeVisitRepository class, but for VaccineOfficeVisits
  *
  * @author Kon Buchanan
  *

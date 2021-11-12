@@ -136,6 +136,8 @@ public class APIVaccineOfficeVisitController extends APIController {
                 loggerUtil.log( TransactionType.VACCINE_OFFICE_VISIT_CREATE, LoggerUtil.currentUser(),
                         visit.getPatient().getUsername() );
                 patient.getVaccinesRecieved().add( visit.getVaccine() );
+                userService.save( patient );
+
                 return new ResponseEntity( visit, HttpStatus.OK );
             }
             // otherwise, return an appropriate response
@@ -151,6 +153,7 @@ public class APIVaccineOfficeVisitController extends APIController {
         }
         catch ( final Exception e ) {
             e.printStackTrace();
+            // System.out.println( "exception!!" );
             return new ResponseEntity(
                     errorResponse(
                             "Could not validate or save the VaccineOfficeVisit provided due to " + e.getMessage() ),

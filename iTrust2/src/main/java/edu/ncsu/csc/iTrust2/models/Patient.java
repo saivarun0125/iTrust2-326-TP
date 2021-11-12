@@ -4,12 +4,10 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 
 import javax.persistence.Basic;
-import javax.persistence.CascadeType;
 import javax.persistence.Convert;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
-import javax.persistence.OneToMany;
 
 import org.hibernate.validator.constraints.Length;
 import org.springframework.data.jpa.convert.threeten.Jsr310JpaConverters.LocalDateConverter;
@@ -138,7 +136,6 @@ public class Patient extends User {
     /**
      * The vaccines this patient has recieved
      */
-    @OneToMany ( cascade = CascadeType.ALL )
     private ArrayList<CovidVaccine> vaccinesRecieved;
 
     /**

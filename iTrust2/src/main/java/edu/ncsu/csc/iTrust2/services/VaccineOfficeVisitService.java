@@ -141,15 +141,6 @@ public class VaccineOfficeVisitService extends Service<VaccineOfficeVisit, Long>
         ov.setVaccine( covidVaccineService.findByCode( ovf.getVaccine() ) );
 
         ov.validateDoseNumber();
-        ov.validateVaccine();
-
-        if ( ovf.getId() != null ) {
-            ov.setId( Long.parseLong( ovf.getId() ) );
-        }
-
-        final ZonedDateTime visitDate = ZonedDateTime.parse( ovf.getDate() );
-        ov.setDate( visitDate );
-
         AppointmentType at = null;
         try {
             at = AppointmentType.valueOf( ovf.getType() );
@@ -158,6 +149,14 @@ public class VaccineOfficeVisitService extends Service<VaccineOfficeVisit, Long>
             at = AppointmentType.VACCINE_APPOINTMENT;
         }
         ov.setType( at );
+        ov.validateVaccine();
+
+        if ( ovf.getId() != null ) {
+            ov.setId( Long.parseLong( ovf.getId() ) );
+        }
+
+        final ZonedDateTime visitDate = ZonedDateTime.parse( ovf.getDate() );
+        ov.setDate( visitDate );
 
         if ( ovf.isScheduled() ) {
             final List<VaccineAppointmentRequest> requests = vaccineAppointmentRequestService

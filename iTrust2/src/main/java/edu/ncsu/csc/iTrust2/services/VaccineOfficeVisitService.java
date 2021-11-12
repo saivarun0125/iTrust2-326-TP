@@ -129,6 +129,9 @@ public class VaccineOfficeVisitService extends Service<VaccineOfficeVisit, Long>
         ov.setPatient( ovf.getPatient() );
         ov.setHcp( ovf.getHcp() );
         ov.setNotes( ovf.getNotes() );
+        ov.setDoseNumber( ovf.getDoseNumber() );
+        ov.setVaccine( ovf.getVaccine() );
+        ov.setScheduled( ovf.isScheduled() );
 
         if ( ovf.getId() != null ) {
             ov.setId( ( ovf.getId() ) );
@@ -194,6 +197,11 @@ public class VaccineOfficeVisitService extends Service<VaccineOfficeVisit, Long>
         if ( p == null || p.getDateOfBirth() == null ) {
             return ov; // we're done, patient can't be tested against
         }
+
+        if ( ov.getDoseNumber() == null ) {
+            throw new IllegalArgumentException( "Dose number must be filled." );
+        }
+
         final LocalDate dob = p.getDateOfBirth();
         int age = ov.getDate().getYear() - dob.getYear();
         // Remove the -1 when changing the dob to OffsetDateTime

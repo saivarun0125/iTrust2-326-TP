@@ -71,6 +71,9 @@ public class VaccineOfficeVisit extends OfficeVisit {
      * @param dose
      */
     public void setDoseNumber ( final Integer dose ) {
+        if ( dose == null ) {
+            throw new IllegalArgumentException( "Dose number must be filled." );
+        }
         this.doseNumber = dose;
     }
 

@@ -150,6 +150,43 @@ public class VaccineOfficeVisitTest {
 
         Assert.assertEquals( "Johnson and Johnson COVID19 Vaccine", retrieved.getVaccine().getName() );
 
+        // some error testing with null fields
+
+        try {
+            vaccine2.setName( null );
+            visit.setVaccine( vaccine2 );
+            vaccineOfficeVisitService.save( visit );
+            Assert.fail();
+        }
+        catch ( final Exception e ) {
+            // pass
+        }
+
+        vaccine2.setName( "Johnson and Johnson COVID19 Vaccine" );
+        visit.setVaccine( vaccine2 );
+        vaccineOfficeVisitService.save( visit );
+
+        try {
+            visit.setDoseNumber( null );
+            vaccineOfficeVisitService.save( visit );
+            Assert.fail();
+        }
+        catch ( final Exception e ) {
+            // pass
+        }
+
+        visit.setDoseNumber( 1 );
+        vaccineOfficeVisitService.save( visit );
+
+        try {
+            visit.setVaccine( null );
+            vaccineOfficeVisitService.save( visit );
+            Assert.fail();
+        }
+        catch ( final Exception e ) {
+            // pass
+        }
+
     }
 
     @Test

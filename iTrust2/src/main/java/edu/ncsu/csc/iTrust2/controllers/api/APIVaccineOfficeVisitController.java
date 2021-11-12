@@ -141,7 +141,7 @@ public class APIVaccineOfficeVisitController extends APIController {
                 final CovidVaccine vaxToAdd = new CovidVaccine( vax.getCode(), vax.getDescription(), vax.getName(),
                         (short) visit.getDoseNumber().intValue(), vax.getDoseInterval(), vax.getAgeRange().get( 0 ),
                         vax.getAgeRange().get( 1 ) );
-                patient.getVaccinesRecieved().add( vaxToAdd );
+                patient.getVaccinesRecieved().add( vax );
                 userService.save( patient );
 
                 return new ResponseEntity( visit, HttpStatus.OK );
@@ -259,7 +259,7 @@ public class APIVaccineOfficeVisitController extends APIController {
                 final CovidVaccine vaxToAdd = new CovidVaccine( vax.getCode(), vax.getDescription(), vax.getName(),
                         (short) visit.getDoseNumber().intValue(), vax.getDoseInterval(), vax.getAgeRange().get( 0 ),
                         vax.getAgeRange().get( 1 ) );
-                patient.getVaccinesRecieved().add( vaxToAdd );
+                patient.getVaccinesRecieved().add( vax );
                 return new ResponseEntity( visit, HttpStatus.OK );
             }
             // otherwise, return an appropriate response

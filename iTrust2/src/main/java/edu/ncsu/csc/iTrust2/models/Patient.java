@@ -1,12 +1,15 @@
 package edu.ncsu.csc.iTrust2.models;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 
 import javax.persistence.Basic;
+import javax.persistence.CascadeType;
 import javax.persistence.Convert;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
+import javax.persistence.OneToMany;
 
 import org.hibernate.validator.constraints.Length;
 import org.springframework.data.jpa.convert.threeten.Jsr310JpaConverters.LocalDateConverter;
@@ -35,61 +38,61 @@ public class Patient extends User {
      * The first name of this patient
      */
     @Length ( min = 1 )
-    private String    firstName;
+    private String                  firstName;
 
     /**
      * The preferred name of this patient
      */
     @Length ( max = 20 )
-    private String    preferredName;
+    private String                  preferredName;
 
     /**
      * The last name of this patient
      */
     @Length ( min = 1 )
-    private String    lastName;
+    private String                  lastName;
 
     /**
      * The email address of this patient
      */
     @Length ( max = 30 )
-    private String    email;
+    private String                  email;
 
     /**
      * The address line 1 of this patient
      */
     @Length ( max = 50 )
-    private String    address1;
+    private String                  address1;
 
     /**
      * The address line 2 of this patient
      */
     @Length ( max = 50 )
-    private String    address2;
+    private String                  address2;
 
     /**
      * The city of residence of this patient
      */
     @Length ( max = 15 )
-    private String    city;
+    private String                  city;
 
     /**
      * The state of residence of this patient
      */
     @Enumerated ( EnumType.STRING )
-    private State     state;
+    private State                   state;
 
     /**
      * The zip code of this patient
      */
     @Length ( min = 5, max = 10 )
-    private String    zip;
+    private String                  zip;
 
     /**
      * The phone number of this patient
      */
     @Length ( min = 12, max = 12 )
-    private String    phone;
+    private String                  phone;
 
     /**
      * The birthday of this patient
@@ -98,7 +101,7 @@ public class Patient extends User {
     // Allows the field to show up nicely in the database
     @Convert ( converter = LocalDateConverter.class )
     @JsonAdapter ( LocalDateAdapter.class )
-    private LocalDate dateOfBirth;
+    private LocalDate               dateOfBirth;
 
     /**
      * The date of death of this patient
@@ -107,30 +110,36 @@ public class Patient extends User {
     // Allows the field to show up nicely in the database
     @Convert ( converter = LocalDateConverter.class )
     @JsonAdapter ( LocalDateAdapter.class )
-    private LocalDate dateOfDeath;
+    private LocalDate               dateOfDeath;
 
     /**
      * The cause of death of this patient
      */
-    private String    causeOfDeath;
+    private String                  causeOfDeath;
 
     /**
      * The blood type of this patient
      */
     @Enumerated ( EnumType.STRING )
-    private BloodType bloodType;
+    private BloodType               bloodType;
 
     /**
      * The ethnicity of this patient
      */
     @Enumerated ( EnumType.STRING )
-    private Ethnicity ethnicity;
+    private Ethnicity               ethnicity;
 
     /**
      * The gender of this patient
      */
     @Enumerated ( EnumType.STRING )
-    private Gender    gender;
+    private Gender                  gender;
+
+    /**
+     * The vaccines this patient has recieved
+     */
+    @OneToMany ( cascade = CascadeType.ALL )
+    private ArrayList<CovidVaccine> vaccinesRecieved;
 
     /**
      * For Hibernate
@@ -490,6 +499,14 @@ public class Patient extends User {
      */
     public void setGender ( final Gender gender ) {
         this.gender = gender;
+    }
+
+    public ArrayList<CovidVaccine> getVaccinesRecieved () {
+        return this.vaccinesRecieved;
+    }
+
+    public void setVaccinesRecieved ( ArrayList<CovidVaccine> vaccinesRecieved ) {
+        this.vaccinesRecieved = vaccinesRecieved;
     }
 
 }

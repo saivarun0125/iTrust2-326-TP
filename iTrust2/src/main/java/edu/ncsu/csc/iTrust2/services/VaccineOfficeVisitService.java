@@ -177,26 +177,6 @@ public class VaccineOfficeVisitService extends Service<VaccineOfficeVisit, Long>
 
         }
         ov.setHospital( hospitalService.findByName( ovf.getHospital() ) );
-        // ov.setBasicHealthMetrics( bhmService.build( ovf ) );
-        // ov.setOphthalmologyMetrics( omService.build( ovf ) );
-        // associate all diagnoses with this visit
-        // if ( ovf.getDiagnoses() != null ) {
-        // ov.setDiagnoses(
-        // ovf.getDiagnoses().stream().map( diagnosisService::build ).collect(
-        // Collectors.toList() ) );
-        // for ( final Diagnosis d : ov.getDiagnoses() ) {
-        // d.setVisit( ov );
-        // }
-        // }
-
-        // ov.validateDiagnoses();
-        // ov.validateOphthalmology();
-
-        // final List<PrescriptionForm> ps = ovf.getPrescriptions();
-        // if ( ps != null ) {
-        // ov.setPrescriptions( ps.stream().map( prescriptionService::build
-        // ).collect( Collectors.toList() ) );
-        // }
 
         final Patient p = (Patient) ov.getPatient();
         if ( p == null || p.getDateOfBirth() == null ) {
@@ -219,18 +199,9 @@ public class VaccineOfficeVisitService extends Service<VaccineOfficeVisit, Long>
             }
         }
         // TODO: Do Dob testing relevent to Covid Vaccines
-
-        //
-        // if ( age < 3 ) {
-        // ov.validateUnder3();
-        // }
-        // else if ( age < 12 ) {
-        // ov.validateUnder12();
-        // }
-        // else {
-        // ov.validate12AndOver();
-        // }
-
+        if ( age < ov.getVaccine().getAgeRange().get( 0 ) || age > ov.getVaccine().getAgeRange().get( 1 ) ) {
+            throw new IllegalArgumentException( "Patient's age must be within vaccine's age range" );
+        }
         return ov;
     }
 }

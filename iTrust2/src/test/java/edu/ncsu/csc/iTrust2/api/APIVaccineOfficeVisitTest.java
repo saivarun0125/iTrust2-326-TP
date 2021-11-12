@@ -547,7 +547,7 @@ public class APIVaccineOfficeVisitTest {
         mvc.perform( post( "/api/v1/vaccineofficevisits" ).contentType( MediaType.APPLICATION_JSON )
                 .content( TestUtils.asJsonString( visit ) ) ).andExpect( status().isBadRequest() );
 
-        Assert.assertEquals( 1, vaccineOfficeVisitService.count() );
+        Assert.assertEquals( 0, vaccineOfficeVisitService.count() );
 
         mvc.perform( get( "/api/v1/vaccineofficevisits" ) ).andExpect( status().isOk() )
                 .andExpect( content().contentType( MediaType.APPLICATION_JSON_VALUE ) );

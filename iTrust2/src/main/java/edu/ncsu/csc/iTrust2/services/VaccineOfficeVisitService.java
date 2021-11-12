@@ -77,13 +77,17 @@ public class VaccineOfficeVisitService extends Service<VaccineOfficeVisit, Long>
     // @Autowired
     // private DiagnosisService diagnosisService;
 
+    /** Covid Vaccine Service */
+    @Autowired
+    private CovidVaccineService              covidVaccineService;
+
     @Override
     protected JpaRepository<VaccineOfficeVisit, Long> getRepository () {
         return repository;
     }
 
     /**
-     * Finds all OfficeVisits created by the specified HCP
+     * Finds all VaccineOfficeVisits created by the specified HCP
      *
      * @param hcp
      *            HCP to search for
@@ -94,7 +98,7 @@ public class VaccineOfficeVisitService extends Service<VaccineOfficeVisit, Long>
     }
 
     /**
-     * Finds all OfficeVisits for the specified Patient
+     * Finds all VaccineOfficeVisits for the specified Patient
      *
      * @param patient
      *            Patient to search for
@@ -105,7 +109,7 @@ public class VaccineOfficeVisitService extends Service<VaccineOfficeVisit, Long>
     }
 
     /**
-     * Find all OfficeVisits for both the specified Patient and HCP
+     * Find all VaccineOfficeVisits for both the specified Patient and HCP
      *
      * @param hcp
      *            HCP to search for
@@ -118,11 +122,12 @@ public class VaccineOfficeVisitService extends Service<VaccineOfficeVisit, Long>
     }
 
     /**
-     * Builds an OfficeVisit based on the deserialised OfficeVisitForm
+     * Builds an VaccineOfficeVisit based on the deserialised
+     * VaccineOfficeVisitForm
      *
      * @param ovf
      *            Form to build from
-     * @return Constructed OfficeVisit
+     * @return Constructed VaccineOfficeVisit
      */
     public VaccineOfficeVisit build ( final VaccineOfficeVisit ovf ) {
         final VaccineOfficeVisit ov = new VaccineOfficeVisit();
@@ -131,8 +136,11 @@ public class VaccineOfficeVisitService extends Service<VaccineOfficeVisit, Long>
         ov.setHcp( ovf.getHcp() );
         ov.setNotes( ovf.getNotes() );
         ov.setDoseNumber( ovf.getDoseNumber() );
-        ov.setVaccine( ovf.getVaccine() );
         ov.setScheduled( ovf.isScheduled() );
+        ov.setVaccine( covidVaccineService.findByCode( ovf.getVaccine().getCode() ) );
+
+        ov.validateDoseNumber();
+        ov.validateVaccine();
 
         if ( ovf.getId() != null ) {
             ov.setId( ( ovf.getId() ) );
@@ -224,9 +232,6 @@ public class VaccineOfficeVisitService extends Service<VaccineOfficeVisit, Long>
         else {
             ov.validate12AndOver();
         }
-
-        ov.validateDoseNumber();
-        ov.validateVaccine();
 
         return ov;
     }

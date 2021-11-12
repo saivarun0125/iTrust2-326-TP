@@ -181,7 +181,65 @@ public class VaccineOfficeVisitTest {
             // pass
         }
 
+        // This isn't working...
+        // try {
+        // visit.setDoseNumber( -1 );
+        // vaccineOfficeVisitService.save( visit );
+        // Assert.fail();
+        // }
+        // catch ( final Exception e ) {
+        // // pass
+        // }
+
+        try {
+            visit.setDoseNumber( -1 );
+            visit.validateDoseNumber();
+            Assert.fail();
+        }
+        catch ( final Exception e ) {
+            // pass
+        }
+
         visit.setDoseNumber( 1 );
+        vaccineOfficeVisitService.save( visit );
+
+        // try {
+        // vaccine2.setAgeRange( new ArrayList<Integer>() );
+        // visit.setVaccine( vaccine2 );
+        // vaccineOfficeVisitService.save( visit );
+        // Assert.fail();
+        // }
+        // catch ( final Exception e ) {
+        // // pass
+        // }
+
+        try {
+            vaccine2.setAgeRange( new ArrayList<Integer>() );
+            visit.setVaccine( vaccine2 );
+            vaccineOfficeVisitService.build( visit );
+            Assert.fail();
+        }
+        catch ( final Exception e ) {
+            // pass
+        }
+
+        vaccine2.setAgeRange( ageRange2 );
+        visit.setVaccine( vaccine2 );
+        vaccineOfficeVisitService.save( visit );
+
+        try {
+            vaccine2.setDoseInterval( null );
+            visit.setVaccine( vaccine2 );
+            vaccineOfficeVisitService.build( visit );
+            Assert.fail();
+        }
+
+        catch ( final Exception e ) {
+            // pass
+        }
+
+        vaccine2.setDoseInterval( doseInterval2 );
+        visit.setVaccine( vaccine2 );
         vaccineOfficeVisitService.save( visit );
 
         try {

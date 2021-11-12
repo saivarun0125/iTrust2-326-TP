@@ -1,5 +1,7 @@
 package edu.ncsu.csc.iTrust2.forms;
 
+import javax.validation.constraints.NotEmpty;
+
 import edu.ncsu.csc.iTrust2.models.CovidVaccine;
 import edu.ncsu.csc.iTrust2.models.VaccineAppointmentRequest;
 import edu.ncsu.csc.iTrust2.models.VaccineOfficeVisit;
@@ -19,10 +21,14 @@ public class VaccineOfficeVisitForm extends OfficeVisitForm {
 
     /** The vaccine field for the vaccine office visit */
     private CovidVaccine              vaccine;
+
     /** Which dose of the vaccine this is */
+    @NotEmpty
     private Integer                   doseNumber;
+
     /** Whether or not this office visit is scheduled */
     private boolean                   scheduled;
+
     /** The appointment request connected to this office visit */
     private VaccineAppointmentRequest appointment;
 
@@ -41,11 +47,6 @@ public class VaccineOfficeVisitForm extends OfficeVisitForm {
      */
     public VaccineOfficeVisitForm ( final VaccineOfficeVisit ov ) {
         super( ov );
-        setPatient( ov.getPatient().toString() );
-        setHcp( ov.getHcp().toString() );
-        setDate( ov.getDate().toString() );
-        setNotes( ov.getNotes() );
-        setId( ov.getId().toString() );
         setScheduled( ov.isScheduled() );
         setVaccine( ov.getVaccine() );
         setDoseNumber( ov.getDoseNumber() );

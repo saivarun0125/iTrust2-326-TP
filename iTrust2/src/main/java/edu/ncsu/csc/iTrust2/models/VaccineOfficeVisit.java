@@ -123,19 +123,19 @@ public class VaccineOfficeVisit extends OfficeVisit {
      * Validates the fields of a vaccine
      */
     public void validateVaccine () {
-        if ( vaccine == null ) {
+        if ( this.vaccine == null ) {
             throw new IllegalArgumentException( "Vaccine must be entered" );
         }
 
-        if ( vaccine.getAgeRange().size() != 2 ) {
+        if ( this.vaccine.getAgeRange().size() != 2 || this.vaccine.getAgeRange() == null ) {
             throw new IllegalArgumentException( "The age range must consist of two whole numbers." );
         }
 
-        if ( vaccine.getDoseInterval() == null ) {
+        if ( this.vaccine.getDoseInterval() == null ) {
             throw new IllegalArgumentException( "There must be a proper dose interval." );
         }
 
-        if ( vaccine.getNumDoses() < 1 ) {
+        if ( this.vaccine.getNumDoses() < 1 ) {
             throw new IllegalArgumentException( "There must be a positive number of doses." );
         }
 
@@ -150,7 +150,7 @@ public class VaccineOfficeVisit extends OfficeVisit {
      * Validates the dose number for the office visit
      */
     public void validateDoseNumber () {
-        if ( this.getDoseNumber() < 1 ) {
+        if ( this.doseNumber < 1 ) {
             throw new IllegalArgumentException( "There must be a positive number of doses." );
         }
 

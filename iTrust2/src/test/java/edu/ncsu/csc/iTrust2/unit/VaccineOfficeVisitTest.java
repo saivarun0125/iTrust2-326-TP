@@ -1,0 +1,207 @@
+package edu.ncsu.csc.iTrust2.unit;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
+import java.time.ZonedDateTime;
+import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.transaction.Transactional;
+
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.junit4.SpringRunner;
+
+import edu.ncsu.csc.iTrust2.TestConfig;
+import edu.ncsu.csc.iTrust2.forms.UserForm;
+import edu.ncsu.csc.iTrust2.models.CovidVaccine;
+import edu.ncsu.csc.iTrust2.models.DoseInterval;
+import edu.ncsu.csc.iTrust2.models.Hospital;
+import edu.ncsu.csc.iTrust2.models.Patient;
+import edu.ncsu.csc.iTrust2.models.Personnel;
+import edu.ncsu.csc.iTrust2.models.User;
+import edu.ncsu.csc.iTrust2.models.VaccineOfficeVisit;
+import edu.ncsu.csc.iTrust2.models.enums.AppointmentType;
+import edu.ncsu.csc.iTrust2.models.enums.Role;
+import edu.ncsu.csc.iTrust2.services.CovidVaccineService;
+import edu.ncsu.csc.iTrust2.services.HospitalService;
+import edu.ncsu.csc.iTrust2.services.ICDCodeService;
+import edu.ncsu.csc.iTrust2.services.UserService;
+import edu.ncsu.csc.iTrust2.services.VaccineOfficeVisitService;
+
+@RunWith ( SpringRunner.class )
+@EnableAutoConfiguration
+@SpringBootTest ( classes = TestConfig.class )
+public class VaccineOfficeVisitTest {
+
+    @Autowired
+    private VaccineOfficeVisitService vaccineOfficeVisitService;
+
+    // @Autowired
+    // private BasicHealthMetricsService basicHealthMetricsService;
+
+    @Autowired
+    private CovidVaccineService       covidVaccineService;
+
+    @Autowired
+    private HospitalService           hospitalService;
+
+    @Autowired
+    private UserService               userService;
+
+    @Autowired
+    private ICDCodeService            icdCodeService;
+
+    // @Autowired
+    // private DrugService drugService;
+    //
+    // @Autowired
+    // private PrescriptionService prescriptionService;
+
+    @Before
+    public void setup () {
+        vaccineOfficeVisitService.deleteAll();
+
+        final User hcp = new Personnel( new UserForm( "hcp", "123456", Role.ROLE_HCP, 1 ) );
+
+        final User alice = new Patient( new UserForm( "AliceThirteen", "123456", Role.ROLE_PATIENT, 1 ) );
+
+        userService.saveAll( List.of( hcp, alice ) );
+        covidVaccineService.deleteAll();
+    }
+
+    @Test
+    @Transactional
+    public void testVaccineOfficeVisit () {
+        Assert.assertEquals( 0, vaccineOfficeVisitService.count() );
+
+        final Hospital hosp = new Hospital( "Dr. Jenkins' Insane Asylum", "123 Main St", "12345", "NC" );
+        hospitalService.save( hosp );
+
+        final VaccineOfficeVisit visit = new VaccineOfficeVisit();
+
+        final CovidVaccine vaccine = new CovidVaccine();
+
+        final List<Integer> ageRange = new ArrayList<Integer>();
+        final DoseInterval doseInterval = new DoseInterval( ChronoUnit.DAYS, 30 );
+
+        ageRange.add( 18 );
+        ageRange.add( 70 );
+
+        vaccine.setAgeRange( ageRange );
+        vaccine.setCode( "0000-0000-00" );
+        vaccine.setDescription( "Pfizer" );
+        vaccine.setDoseInterval( doseInterval );
+        vaccine.setName( "Pfizer COVID19 Vaccine" );
+        vaccine.setNumDoses( (short) 2 );
+
+        covidVaccineService.save( vaccine );
+
+        visit.setVaccine( vaccine );
+        visit.setType( AppointmentType.VACCINE_APPOINTMENT );
+        visit.setHospital( hosp );
+        visit.setPatient( userService.findByName( "AliceThirteen" ) );
+        visit.setHcp( userService.findByName( "AliceThirteen" ) );
+        visit.setDate( ZonedDateTime.now() );
+        visit.setVaccine( vaccine );
+        visit.setDoseNumber( 1 );
+        visit.setScheduled( true );
+        vaccineOfficeVisitService.save( visit );
+
+        Assert.assertEquals( 1, vaccineOfficeVisitService.count() );
+
+        VaccineOfficeVisit retrieved = vaccineOfficeVisitService.findAll().get( 0 );
+
+        Assert.assertEquals( "Pfizer COVID19 Vaccine", retrieved.getVaccine().getName() );
+
+        vaccineOfficeVisitService.delete( visit );
+
+        assertEquals( vaccineOfficeVisitService.findAll().size(), 0 );
+
+        final CovidVaccine vaccine2 = new CovidVaccine();
+
+        final List<Integer> ageRange2 = new ArrayList<Integer>();
+        final DoseInterval doseInterval2 = new DoseInterval( ChronoUnit.DAYS, 30 );
+
+        ageRange2.add( 18 );
+        ageRange2.add( 70 );
+
+        vaccine2.setAgeRange( ageRange2 );
+        vaccine2.setCode( "0100-0000-00" );
+        vaccine2.setDescription( "Janssen" );
+        vaccine2.setDoseInterval( doseInterval2 );
+        vaccine2.setName( "Johnson and Johnson COVID19 Vaccine" );
+        vaccine2.setNumDoses( (short) 1 );
+
+        covidVaccineService.save( vaccine2 );
+        visit.setVaccine( vaccine2 );
+
+        vaccineOfficeVisitService.save( visit );
+
+        retrieved = vaccineOfficeVisitService.findAll().get( 0 );
+
+        Assert.assertEquals( "Johnson and Johnson COVID19 Vaccine", retrieved.getVaccine().getName() );
+
+    }
+
+    @Test
+    @Transactional
+    public void testVaccineOfficeVisitForm () {
+
+        final Hospital hosp = new Hospital( "Dr. Jenkins' Mad Eyes", "123 Main St", "12345", "NC" );
+        hospitalService.save( hosp );
+
+        final VaccineOfficeVisit visit = new VaccineOfficeVisit();
+
+        final CovidVaccine vaccine = new CovidVaccine();
+
+        final List<Integer> ageRange = new ArrayList<Integer>();
+        final DoseInterval doseInterval = new DoseInterval( ChronoUnit.DAYS, 30 );
+
+        ageRange.add( 20 );
+        ageRange.add( 30 );
+
+        vaccine.setAgeRange( ageRange );
+        vaccine.setCode( "0000-0000-00" );
+        vaccine.setDescription( "Pfizer" );
+        vaccine.setDoseInterval( doseInterval );
+        vaccine.setName( "Pfizer COVID19 Vaccine" );
+        vaccine.setNumDoses( (short) 2 );
+
+        covidVaccineService.save( vaccine );
+
+        visit.setType( AppointmentType.VACCINE_APPOINTMENT );
+        visit.setHospital( hosp );
+        visit.setPatient( userService.findByName( "AliceThirteen" ) );
+        visit.setHcp( userService.findByName( "AliceThirteen" ) );
+        visit.setDate( ZonedDateTime.now() );
+        visit.setVaccine( vaccine );
+        visit.setDoseNumber( 1 );
+        visit.setScheduled( true );
+
+        vaccineOfficeVisitService.save( visit );
+
+        assertEquals( 1, vaccineOfficeVisitService.count() );
+
+        final VaccineOfficeVisit retrieved = vaccineOfficeVisitService.findAll().get( 0 );
+        assertNotNull( retrieved );
+
+        assertEquals( "Pfizer COVID19 Vaccine", retrieved.getVaccine().getName() );
+
+        assertNotNull( retrieved.getVaccine() );
+
+        assertEquals( 1, (int) retrieved.getDoseNumber() );
+
+        assertTrue( retrieved.isScheduled() );
+
+    }
+
+}

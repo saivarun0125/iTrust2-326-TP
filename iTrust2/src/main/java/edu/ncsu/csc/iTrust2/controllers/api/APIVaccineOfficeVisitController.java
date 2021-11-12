@@ -18,6 +18,7 @@ import edu.ncsu.csc.iTrust2.forms.VaccineOfficeVisitForm;
 import edu.ncsu.csc.iTrust2.models.CovidVaccine;
 import edu.ncsu.csc.iTrust2.models.Patient;
 import edu.ncsu.csc.iTrust2.models.User;
+import edu.ncsu.csc.iTrust2.models.VaccineDose;
 import edu.ncsu.csc.iTrust2.models.VaccineOfficeVisit;
 import edu.ncsu.csc.iTrust2.models.enums.TransactionType;
 import edu.ncsu.csc.iTrust2.services.UserService;
@@ -132,16 +133,17 @@ public class APIVaccineOfficeVisitController extends APIController {
             // if not fully vaxxed, vaccine may be adminisered. Add vaccine to
             // patient's vaccines recieved.
             if ( isFullyVaxxed == 0 ) {
+                if ( !this.correctDoseNumber( visit.getDoseNumber(), patient ) ) {
+                    return new ResponseEntity( errorResponse( "Invalid Dose Number" ), HttpStatus.CONFLICT );
+                }
                 vaccineOfficeVisitService.save( visit );
                 loggerUtil.log( TransactionType.VACCINE_OFFICE_VISIT_CREATE, LoggerUtil.currentUser(),
                         visit.getPatient().getUsername() );
                 final CovidVaccine vax = visit.getVaccine();
                 // We do this so we don't get duplicates in a patient's
                 // vaccination list.
-                final CovidVaccine vaxToAdd = new CovidVaccine( vax.getCode(), vax.getDescription(), vax.getName(),
-                        (short) visit.getDoseNumber().intValue(), vax.getDoseInterval(), vax.getAgeRange().get( 0 ),
-                        vax.getAgeRange().get( 1 ) );
-                patient.getVaccinesRecieved().add( vax );
+                final VaccineDose vaxToAdd = new VaccineDose( vax.getCode(), visit.getDoseNumber(), vax.getNumDoses() );
+                patient.getVaccinesRecieved().add( vaxToAdd );
                 userService.save( patient );
 
                 return new ResponseEntity( visit, HttpStatus.OK );
@@ -159,67 +161,13 @@ public class APIVaccineOfficeVisitController extends APIController {
         }
         catch ( final Exception e ) {
             e.printStackTrace();
+            System.out.println( e.getMessage() );
             // System.out.println( "exception!!" );
             return new ResponseEntity(
                     errorResponse(
                             "Could not validate or save the VaccineOfficeVisit provided due to " + e.getMessage() ),
                     HttpStatus.BAD_REQUEST );
         }
-    }
-
-    /**
-     * 1 means fully vaxxed, 0 means not fully vaxxed, 2 means attempted mixing
-     * of vaccines
-     *
-     * @param patient
-     *            the patient
-     * @param vaccineToBeAdministered
-     *            the vaccine
-     * @return indication of vaccination
-     */
-    private int isFullyVaxxed ( Patient patient, CovidVaccine vaccineToBeAdministered ) {
-        // if the patient hasn't received any vaccines, patient is not fully
-        // vaxxed
-        if ( patient.getVaccinesRecieved() == null ) {
-            patient.setVaccinesRecieved( new ArrayList<CovidVaccine>() );
-            return 0;
-        }
-
-        // This isn't currently needed but would help the system be extended in
-        // the future. E.g. if you wanted to add more types of vaccines you
-        // could change the list in Patient.java to be of an abstract vaccine
-        // type, and this piece of code would filter the Covid Vaccines out of
-        // that list.
-        final ArrayList<CovidVaccine> vaccinesRecieved = new ArrayList<CovidVaccine>();
-        for ( final CovidVaccine vaccine : patient.getVaccinesRecieved() ) {
-            if ( vaccine.getClass().getName().equals( "edu.ncsu.csc.iTrust2.models.CovidVaccine" ) ) {
-                vaccinesRecieved.add( vaccine );
-            }
-        }
-
-        if ( vaccinesRecieved.size() == 0 ) {
-            return 0;
-        }
-
-        // checks for if the size equals one
-        if ( vaccinesRecieved.size() == 1 ) {
-            // if vaccine recieved was a one dose vaccine, patient is fully
-            // vaxxed
-            if ( vaccinesRecieved.get( 0 ).getNumDoses() == (short) 1 ) {
-                return 1;
-            }
-            // check to see if the vaccine to be administered is the same as the
-            // one the patient already has
-            else {
-                if ( vaccineToBeAdministered.getCode().equals( vaccinesRecieved.get( 0 ).getCode() ) ) {
-                    return 0;
-                }
-                else {
-                    return 2;
-                }
-            }
-        }
-        return 1;
     }
 
     /**
@@ -250,16 +198,18 @@ public class APIVaccineOfficeVisitController extends APIController {
             // if not fully vaxxed, vaccine may be adminisered. Add vaccine to
             // patient's vaccines recieved.
             if ( isFullyVaxxed == 0 ) {
+                if ( !this.correctDoseNumber( visit.getDoseNumber(), patient ) ) {
+                    return new ResponseEntity( errorResponse( "Invalid Dose Number" ), HttpStatus.CONFLICT );
+                }
+
                 vaccineOfficeVisitService.save( visit );
                 loggerUtil.log( TransactionType.VACCINE_OFFICE_VISIT_CREATE, LoggerUtil.currentUser(),
                         visit.getPatient().getUsername() );
                 final CovidVaccine vax = visit.getVaccine();
                 // We do this so we don't get duplicates in a patient's
                 // vaccination list.
-                final CovidVaccine vaxToAdd = new CovidVaccine( vax.getCode(), vax.getDescription(), vax.getName(),
-                        (short) visit.getDoseNumber().intValue(), vax.getDoseInterval(), vax.getAgeRange().get( 0 ),
-                        vax.getAgeRange().get( 1 ) );
-                patient.getVaccinesRecieved().add( vax );
+                final VaccineDose vaxToAdd = new VaccineDose( vax.getCode(), visit.getDoseNumber(), vax.getNumDoses() );
+                patient.getVaccinesRecieved().add( vaxToAdd );
                 return new ResponseEntity( visit, HttpStatus.OK );
             }
             // otherwise, return an appropriate response
@@ -279,6 +229,72 @@ public class APIVaccineOfficeVisitController extends APIController {
                     errorResponse(
                             "Could not validate or save the VaccineOfficeVisit provided due to " + e.getMessage() ),
                     HttpStatus.BAD_REQUEST );
+        }
+    }
+
+    /**
+     * 1 means fully vaxxed, 0 means not fully vaxxed, 2 means attempted mixing
+     * of vaccines
+     *
+     * @param patient
+     *            the patient
+     * @param vaccineToBeAdministered
+     *            the vaccine
+     * @return indication of vaccination
+     */
+    private int isFullyVaxxed ( Patient patient, CovidVaccine vaccineToBeAdministered ) {
+        // if the patient hasn't received any vaccines, patient is not fully
+        // vaxxed
+        if ( patient.getVaccinesRecieved() == null ) {
+            patient.setVaccinesRecieved( new ArrayList<VaccineDose>() );
+            return 0;
+        }
+
+        // This isn't currently needed but would help the system be extended in
+        // the future. E.g. if you wanted to add more types of vaccines you
+        // could make specific types of vaccine doses extend vaccine dose and
+        // filter them like this
+        final ArrayList<VaccineDose> vaccinesRecieved = new ArrayList<VaccineDose>();
+        for ( final VaccineDose vaccine : patient.getVaccinesRecieved() ) {
+            if ( vaccine.getClass().getName().equals( "edu.ncsu.csc.iTrust2.models.VaccineDose" ) ) {
+                vaccinesRecieved.add( vaccine );
+            }
+        }
+
+        if ( vaccinesRecieved.size() == 0 ) {
+            return 0;
+        }
+
+        // checks for if the size equals one
+        if ( vaccinesRecieved.size() == 1 ) {
+            // if vaccine recieved was a one dose vaccine, patient is fully
+            // vaxxed
+            if ( vaccinesRecieved.get( 0 ).getNumDoses() == (short) 1 ) {
+                return 1;
+            }
+            // check to see if the vaccine to be administered is the same as the
+            // one the patient already has
+            else {
+                if ( vaccineToBeAdministered.getCode().equals( vaccinesRecieved.get( 0 ).getCode() ) ) {
+                    return 0;
+                }
+                else {
+                    return 2;
+                }
+            }
+        }
+        return 1;
+    }
+
+    private boolean correctDoseNumber ( int doseNumber, Patient patient ) {
+        if ( patient.getVaccinesRecieved().size() == 0 && doseNumber == 1 ) {
+            return true;
+        }
+        else if ( patient.getVaccinesRecieved().size() == 1 && doseNumber == 2 ) {
+            return true;
+        }
+        else {
+            return false;
         }
     }
 

@@ -104,7 +104,13 @@ public class APIVaccineOfficeVisitTest {
 
         final Patient patient2 = buildPatient( "patient2" );
 
-        userService.saveAll( List.of( patient, hcp, antti, patient1, patient2 ) );
+        final Patient patient3 = buildPatient( "patient3" );
+
+        final Patient patient4 = buildPatient( "patient4" );
+
+        final Patient babyPatient = buildBabyPatient( "babyPatient" );
+
+        userService.saveAll( List.of( patient, hcp, antti, patient1, patient2, patient3, patient4, babyPatient ) );
 
         final Hospital hosp = new Hospital();
         hosp.setAddress( "123 Raleigh Road" );
@@ -132,6 +138,27 @@ public class APIVaccineOfficeVisitTest {
         antti.setBloodType( BloodType.APos );
         antti.setCity( "Viipuri" );
         final LocalDate date = LocalDate.of( 1977, 6, 15 );
+        antti.setDateOfBirth( date );
+        antti.setEmail( "antti@itrust.fi" );
+        antti.setEthnicity( Ethnicity.Caucasian );
+        antti.setFirstName( name );
+        antti.setGender( Gender.Male );
+        antti.setLastName( "Walhelm" );
+        antti.setPhone( "123-456-7890" );
+        antti.setState( State.NC );
+        antti.setZip( "27514" );
+
+        return antti;
+    }
+
+    private Patient buildBabyPatient ( String name ) {
+        final Patient antti = new Patient( new UserForm( name, "123456", Role.ROLE_PATIENT, 1 ) );
+
+        antti.setAddress1( "1 Test Street" );
+        antti.setAddress2( "Some Location" );
+        antti.setBloodType( BloodType.APos );
+        antti.setCity( "Viipuri" );
+        final LocalDate date = LocalDate.of( 2029, 6, 15 );
         antti.setDateOfBirth( date );
         antti.setEmail( "antti@itrust.fi" );
         antti.setEthnicity( Ethnicity.Caucasian );
@@ -224,7 +251,7 @@ public class APIVaccineOfficeVisitTest {
     @Test
     @Transactional
     @WithMockUser ( username = "hcp", roles = { "HCP" } )
-    public void testVaccineOfficeVisitAPI () throws Exception {
+    public void testUnscheduled () throws Exception {
 
         Assert.assertEquals( 0, vaccineOfficeVisitService.count() );
 
@@ -273,23 +300,257 @@ public class APIVaccineOfficeVisitTest {
 
         mvc.perform( get( "/api/v1/vaccineofficevisits/" + id ) ).andExpect( status().isOk() )
                 .andExpect( content().contentType( MediaType.APPLICATION_JSON_VALUE ) );
+    }
 
-        // visit.setDate( "2030-11-19T09:45:00.000-05:00" );
-        //
-        // mvc.perform( put( "/api/v1/vaccineofficevisits/" + id ).contentType(
-        // MediaType.APPLICATION_JSON )
-        // .content( TestUtils.asJsonString( visit ) ) ).andExpect(
-        // status().isOk() )
-        // .andExpect( content().contentType( MediaType.APPLICATION_JSON_VALUE )
-        // );
-        //
-        // // PUT with ID not in database should fail
-        // final long tempId = 101;
-        // visit.setId( "101" );
-        // mvc.perform( put( "/api/v1/vaccineofficevisits/" + tempId
-        // ).contentType( MediaType.APPLICATION_JSON )
-        // .content( TestUtils.asJsonString( visit ) ) ).andExpect(
-        // status().isNotFound() );
+    @Test
+    @Transactional
+    @WithMockUser ( username = "hcp", roles = { "HCP" } )
+    public void testMultipleDoses () throws Exception {
+        // test unscheduled vaccine appt
+        final VaccineOfficeVisitForm visit = new VaccineOfficeVisitForm();
+        visit.setPreScheduled( "no" );
+        visit.setDate( "2030-11-19T04:50:00.000-05:00" );
+        visit.setHcp( "hcp" );
+        visit.setPatient( "patient2" );
+        visit.setNotes( "Test office visit" );
+        visit.setType( AppointmentType.VACCINE_APPOINTMENT.toString() );
+        visit.setHospital( "iTrust Test Hospital 2" );
+        visit.setVaccine( "1111-1111-11" );
+        visit.setDoseNumber( 1 );
+        visit.setScheduled( false );
+
+        /* Create the Office Visit */
+        mvc.perform( post( "/api/v1/vaccineofficevisits" ).contentType( MediaType.APPLICATION_JSON )
+                .content( TestUtils.asJsonString( visit ) ) ).andExpect( status().isOk() );
+
+        Assert.assertEquals( 1, vaccineOfficeVisitService.count() );
+
+        mvc.perform( get( "/api/v1/vaccineofficevisits" ) ).andExpect( status().isOk() )
+                .andExpect( content().contentType( MediaType.APPLICATION_JSON_VALUE ) );
+
+        // test second dose
+        visit.setPreScheduled( "no" );
+        visit.setDate( "2030-12-25T04:50:00.000-05:00" );
+        visit.setHcp( "hcp" );
+        visit.setPatient( "patient2" );
+        visit.setNotes( "Test office visit 2" );
+        visit.setType( AppointmentType.VACCINE_APPOINTMENT.toString() );
+        visit.setHospital( "iTrust Test Hospital 2" );
+        visit.setVaccine( "1111-1111-11" );
+        visit.setDoseNumber( 2 );
+        visit.setScheduled( false );
+
+        mvc.perform( post( "/api/v1/vaccineofficevisits" ).contentType( MediaType.APPLICATION_JSON )
+                .content( TestUtils.asJsonString( visit ) ) ).andExpect( status().isOk() );
+
+        Assert.assertEquals( 2, vaccineOfficeVisitService.count() );
+
+        mvc.perform( get( "/api/v1/vaccineofficevisits" ) ).andExpect( status().isOk() )
+                .andExpect( content().contentType( MediaType.APPLICATION_JSON_VALUE ) );
+
+        // test third dose
+
+        visit.setPreScheduled( "no" );
+        visit.setDate( "2031-02-03T04:50:00.000-05:00" );
+        visit.setHcp( "hcp" );
+        visit.setPatient( "patient2" );
+        visit.setNotes( "Test office visit 2" );
+        visit.setType( AppointmentType.VACCINE_APPOINTMENT.toString() );
+        visit.setHospital( "iTrust Test Hospital 2" );
+        visit.setVaccine( "1111-1111-11" );
+        visit.setDoseNumber( 2 );
+        visit.setScheduled( false );
+
+        mvc.perform( post( "/api/v1/vaccineofficevisits" ).contentType( MediaType.APPLICATION_JSON )
+                .content( TestUtils.asJsonString( visit ) ) ).andExpect( status().isConflict() );
+
+        Assert.assertEquals( 2, vaccineOfficeVisitService.count() );
+
+        mvc.perform( get( "/api/v1/vaccineofficevisits" ) ).andExpect( status().isOk() )
+                .andExpect( content().contentType( MediaType.APPLICATION_JSON_VALUE ) );
+
+    }
+
+    @Test
+    @Transactional
+    @WithMockUser ( username = "hcp", roles = { "HCP" } )
+    public void testSingleDose () throws Exception {
+        // test unscheduled vaccine appt
+        final VaccineOfficeVisitForm visit = new VaccineOfficeVisitForm();
+        visit.setPreScheduled( "no" );
+        visit.setDate( "2030-11-19T04:50:00.000-05:00" );
+        visit.setHcp( "hcp" );
+        visit.setPatient( "patient3" );
+        visit.setNotes( "Test office visit" );
+        visit.setType( AppointmentType.VACCINE_APPOINTMENT.toString() );
+        visit.setHospital( "iTrust Test Hospital 2" );
+        visit.setVaccine( "3333-3333-33" );
+        visit.setDoseNumber( 1 );
+        visit.setScheduled( false );
+
+        /* Create the Office Visit */
+        mvc.perform( post( "/api/v1/vaccineofficevisits" ).contentType( MediaType.APPLICATION_JSON )
+                .content( TestUtils.asJsonString( visit ) ) ).andExpect( status().isOk() );
+
+        Assert.assertEquals( 1, vaccineOfficeVisitService.count() );
+
+        mvc.perform( get( "/api/v1/vaccineofficevisits" ) ).andExpect( status().isOk() )
+                .andExpect( content().contentType( MediaType.APPLICATION_JSON_VALUE ) );
+
+        visit.setPreScheduled( "no" );
+        visit.setDate( "2030-12-25T04:50:00.000-05:00" );
+        visit.setHcp( "hcp" );
+        visit.setPatient( "patient3" );
+        visit.setNotes( "Test office visit" );
+        visit.setType( AppointmentType.VACCINE_APPOINTMENT.toString() );
+        visit.setHospital( "iTrust Test Hospital 2" );
+        visit.setVaccine( "3333-3333-33" );
+        visit.setDoseNumber( 1 );
+        visit.setScheduled( false );
+
+        /* Create the Office Visit */
+        mvc.perform( post( "/api/v1/vaccineofficevisits" ).contentType( MediaType.APPLICATION_JSON )
+                .content( TestUtils.asJsonString( visit ) ) ).andExpect( status().isConflict() );
+
+        Assert.assertEquals( 1, vaccineOfficeVisitService.count() );
+
+        mvc.perform( get( "/api/v1/vaccineofficevisits" ) ).andExpect( status().isOk() )
+                .andExpect( content().contentType( MediaType.APPLICATION_JSON_VALUE ) );
+
+    }
+
+    @Test
+    @Transactional
+    @WithMockUser ( username = "hcp", roles = { "HCP" } )
+    public void testMixAndMatch () throws Exception {
+        // test unscheduled vaccine appt
+        final VaccineOfficeVisitForm visit = new VaccineOfficeVisitForm();
+        visit.setPreScheduled( "no" );
+        visit.setDate( "2030-11-19T04:50:00.000-05:00" );
+        visit.setHcp( "hcp" );
+        visit.setPatient( "patient4" );
+        visit.setNotes( "Test office visit" );
+        visit.setType( AppointmentType.VACCINE_APPOINTMENT.toString() );
+        visit.setHospital( "iTrust Test Hospital 2" );
+        visit.setVaccine( "1111-1111-11" );
+        visit.setDoseNumber( 1 );
+        visit.setScheduled( false );
+
+        /* Create the Office Visit */
+        mvc.perform( post( "/api/v1/vaccineofficevisits" ).contentType( MediaType.APPLICATION_JSON )
+                .content( TestUtils.asJsonString( visit ) ) ).andExpect( status().isOk() );
+
+        Assert.assertEquals( 1, vaccineOfficeVisitService.count() );
+
+        mvc.perform( get( "/api/v1/vaccineofficevisits" ) ).andExpect( status().isOk() )
+                .andExpect( content().contentType( MediaType.APPLICATION_JSON_VALUE ) );
+
+        visit.setPreScheduled( "no" );
+        visit.setDate( "2030-12-25T04:50:00.000-05:00" );
+        visit.setHcp( "hcp" );
+        visit.setPatient( "patient4" );
+        visit.setNotes( "Test office visit" );
+        visit.setType( AppointmentType.VACCINE_APPOINTMENT.toString() );
+        visit.setHospital( "iTrust Test Hospital 2" );
+        visit.setVaccine( "2222-2222-22" );
+        visit.setDoseNumber( 2 );
+        visit.setScheduled( false );
+
+        /* Create the Office Visit */
+        mvc.perform( post( "/api/v1/vaccineofficevisits" ).contentType( MediaType.APPLICATION_JSON )
+                .content( TestUtils.asJsonString( visit ) ) ).andExpect( status().isConflict() );
+
+        Assert.assertEquals( 1, vaccineOfficeVisitService.count() );
+
+        mvc.perform( get( "/api/v1/vaccineofficevisits" ) ).andExpect( status().isOk() )
+                .andExpect( content().contentType( MediaType.APPLICATION_JSON_VALUE ) );
+
+        visit.setPreScheduled( "no" );
+        visit.setDate( "2030-12-25T04:50:00.000-05:00" );
+        visit.setHcp( "hcp" );
+        visit.setPatient( "patient4" );
+        visit.setNotes( "Test office visit" );
+        visit.setType( AppointmentType.VACCINE_APPOINTMENT.toString() );
+        visit.setHospital( "iTrust Test Hospital 2" );
+        visit.setVaccine( "3333-3333-33" );
+        visit.setDoseNumber( 2 );
+        visit.setScheduled( false );
+
+        /* Create the Office Visit */
+        mvc.perform( post( "/api/v1/vaccineofficevisits" ).contentType( MediaType.APPLICATION_JSON )
+                .content( TestUtils.asJsonString( visit ) ) ).andExpect( status().isConflict() );
+
+        Assert.assertEquals( 1, vaccineOfficeVisitService.count() );
+
+        mvc.perform( get( "/api/v1/vaccineofficevisits" ) ).andExpect( status().isOk() )
+                .andExpect( content().contentType( MediaType.APPLICATION_JSON_VALUE ) );
+
+        visit.setPreScheduled( "no" );
+        visit.setDate( "2030-12-25T04:50:00.000-05:00" );
+        visit.setHcp( "hcp" );
+        visit.setPatient( "patient4" );
+        visit.setNotes( "Test office visit" );
+        visit.setType( AppointmentType.VACCINE_APPOINTMENT.toString() );
+        visit.setHospital( "iTrust Test Hospital 2" );
+        visit.setVaccine( "1111-1111-11" );
+        visit.setDoseNumber( 1 );
+        visit.setScheduled( false );
+
+        /* Create the Office Visit */
+        mvc.perform( post( "/api/v1/vaccineofficevisits" ).contentType( MediaType.APPLICATION_JSON )
+                .content( TestUtils.asJsonString( visit ) ) ).andExpect( status().isConflict() );
+
+        Assert.assertEquals( 1, vaccineOfficeVisitService.count() );
+
+        mvc.perform( get( "/api/v1/vaccineofficevisits" ) ).andExpect( status().isOk() )
+                .andExpect( content().contentType( MediaType.APPLICATION_JSON_VALUE ) );
+
+        visit.setPreScheduled( "no" );
+        visit.setDate( "2030-12-25T04:50:00.000-05:00" );
+        visit.setHcp( "hcp" );
+        visit.setPatient( "patient4" );
+        visit.setNotes( "Test office visit" );
+        visit.setType( AppointmentType.VACCINE_APPOINTMENT.toString() );
+        visit.setHospital( "iTrust Test Hospital 2" );
+        visit.setVaccine( "1111-1111-11" );
+        visit.setDoseNumber( 2 );
+        visit.setScheduled( false );
+
+        /* Create the Office Visit */
+        mvc.perform( post( "/api/v1/vaccineofficevisits" ).contentType( MediaType.APPLICATION_JSON )
+                .content( TestUtils.asJsonString( visit ) ) ).andExpect( status().isOk() );
+
+        Assert.assertEquals( 2, vaccineOfficeVisitService.count() );
+
+        mvc.perform( get( "/api/v1/vaccineofficevisits" ) ).andExpect( status().isOk() )
+                .andExpect( content().contentType( MediaType.APPLICATION_JSON_VALUE ) );
+
+    }
+
+    @Test
+    @Transactional
+    @WithMockUser ( username = "hcp", roles = { "HCP" } )
+    public void testInvalidAge () throws Exception {
+        final VaccineOfficeVisitForm visit = new VaccineOfficeVisitForm();
+        visit.setPreScheduled( "no" );
+        visit.setDate( "2030-11-19T04:50:00.000-05:00" );
+        visit.setHcp( "hcp" );
+        visit.setPatient( "babyPatient" );
+        visit.setNotes( "Test office visit" );
+        visit.setType( AppointmentType.VACCINE_APPOINTMENT.toString() );
+        visit.setHospital( "iTrust Test Hospital 2" );
+        visit.setVaccine( "3333-3333-33" );
+        visit.setDoseNumber( 1 );
+        visit.setScheduled( false );
+
+        /* Create the Office Visit */
+        mvc.perform( post( "/api/v1/vaccineofficevisits" ).contentType( MediaType.APPLICATION_JSON )
+                .content( TestUtils.asJsonString( visit ) ) ).andExpect( status().isBadRequest() );
+
+        Assert.assertEquals( 1, vaccineOfficeVisitService.count() );
+
+        mvc.perform( get( "/api/v1/vaccineofficevisits" ) ).andExpect( status().isOk() )
+                .andExpect( content().contentType( MediaType.APPLICATION_JSON_VALUE ) );
 
     }
 

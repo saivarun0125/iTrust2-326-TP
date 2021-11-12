@@ -132,7 +132,9 @@ public class VaccineOfficeVisit extends OfficeVisit {
         }
 
         if ( this.vaccine.getDoseInterval() == null ) {
-            throw new IllegalArgumentException( "There must be a proper dose interval." );
+            if ( this.vaccine.getNumDoses() != 1 ) {
+                throw new IllegalArgumentException( "There must be a proper dose interval." );
+            }
         }
 
         if ( this.vaccine.getNumDoses() < 1 ) {

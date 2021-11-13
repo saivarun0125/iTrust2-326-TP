@@ -70,6 +70,13 @@
 						$scope.getPersonnelByRole(['HCP']);
 					}
 				}
+
+				// get a list of the vaccines
+				$http.get("/iTrust2/api/v1/CovidVaccines").then(
+						function (response) {
+							$scope.vaccines = response.data;
+						}
+					);
 				
 				/**
 				 * Loads the appointment types from the API.
@@ -89,12 +96,43 @@
 					// Validate request date
 					var date = new Date($scope.inputDate);
 					const now = new Date();
-					if (!dateTimeService.isValidDate(date) || date - now < 0) {
+
+					if (!dateTimeService.isValidDate(date)) {
 						$scope.errorMsg += "Please input a valid date\n";
+					}
+
+					console.log(date - now);
+					requestYear = date.getFullYear();
+					requestDay = date.getDate();
+					requestMonth = date.getMonth() + 1;
+					
+					currentYear = now.getFullYear();
+					currentDay = now.getDate();
+					currentMonth = now.getMonth();
+					
+
+					// better date error checking
+					if (requestYear < currentYear) {
+						$scope.errorMsg += "Please input a valid date116\n";
+					} else if (requestYear == currentYear && requestMonth < currentMonth){
+						$scope.errorMsg += "Please input a valid date118\n";
+					} else if (requestYear == currentYear && requestMonth == currentMonth && requestDay < currentDay) {
+						$scope.errorMsg += "Please input a valid date120"
 					}
 
 					const time = new Date($scope.inputTime);
 					if (!dateTimeService.isValidDate(time)) {
+						$scope.errorMsg += "Please input a valid time\n";
+					}
+
+					requestHour = time.getHours();
+					requestMinutes = time.getMinutes();
+					currentHour = now.getHours();
+					currentMinutes = now.getMinutes();
+
+					if (requestYear == currentYear && requestMonth == currentMonth && requestDay == currentDay && requestHour < currentHour) {
+						$scope.errorMsg += "Please input a valid time\n";
+					} else if (requestYear == currentYear && requestMonth == currentMonth && requestDay == currentDay && requestHour == currentHour && requestMinutes < currentMinutes) {
 						$scope.errorMsg += "Please input a valid time\n";
 					}
 
@@ -126,7 +164,11 @@
 					if ($scope.errorMsg) {
 						$scope.errorMsg = "Could not submit appointment request\n" + $scope.errorMsg;
 					}
-					$http.post("/iTrust2/api/v1/appointmentrequests", $scope.appointment).then( 
+
+					if ($scope.appointment.type == "VACCINE_APPOINTMENT") {
+						console.log($scope.appointment);
+						$scope.appointment["status"] = "APPROVED";
+						$http.post("/iTrust2/api/v1/vaccineappointmentrequests", $scope.appointment).then( 
 						function(response) {	
 							$scope.loadAppointments();
 							$scope.message = "Your appointment request has been requested successfully."
@@ -141,6 +183,25 @@
 							$scope.message = "";
 							$scope.message1 = "";
 						});
+					} else {
+						$http.post("/iTrust2/api/v1/appointmentrequests", $scope.appointment).then( 
+						function(response) {	
+							$scope.loadAppointments();
+							$scope.message = "Your appointment request has been requested successfully."
+							$scope.message1 = "";
+							$scope.appointment = {};
+							$scope.inputDate = null;
+							$scope.inputTime = null;
+							$scope.errorMsg1 = "";
+							$scope.selectedAppointment = {};
+						}, function(rejection) {
+							$scope.errorMsg += "Could not complete appointment request"
+							$scope.message = "";
+							$scope.message1 = "";
+						});
+					}
+
+					
 				}
 				
 				$scope.selectedAppointment = {};
@@ -224,6 +285,11 @@
 										<option ng-repeat="type in types" value="{{type}}">{{type
 											| humanize}}</option>
 									</select>
+								</div>
+
+								<div class="form-group" ng-show="appointment.type == 'VACCINE_APPOINTMENT'">
+									<label for="type">Preferred Vaccine:</label> 
+									<select class="form-control" ng-options="vaccine.code as vaccine.name for vaccine in vaccines" ng-model="appointment.vaccine"></select>
 								</div>
 
 								<div class="form-group">

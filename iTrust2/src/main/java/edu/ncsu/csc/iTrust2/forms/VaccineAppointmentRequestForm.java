@@ -52,7 +52,6 @@ public class VaccineAppointmentRequestForm extends AppointmentRequestForm {
      *
      */
     public void setVaccine ( final String vaccine ) {
-        System.out.println( vaccine );
         this.vaccine = vaccine;
     }
 

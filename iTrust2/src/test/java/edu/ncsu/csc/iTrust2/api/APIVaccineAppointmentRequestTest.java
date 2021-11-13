@@ -159,8 +159,6 @@ public class APIVaccineAppointmentRequestTest {
     @Transactional
     public void testVaccineAppointmentRequestAPI () throws Exception {
 
-        final CovidVaccine vaccine = covidVaccineService.findByCode( "1111-1111-11" );
-
         final User patient = service.findByName( "patient" );
 
         final VaccineAppointmentRequestForm vaccineAppointmentForm = new VaccineAppointmentRequestForm();
@@ -172,7 +170,7 @@ public class APIVaccineAppointmentRequestTest {
         vaccineAppointmentForm.setHcp( "hcp" );
         vaccineAppointmentForm.setPatient( "patient" );
         vaccineAppointmentForm.setComments( "Test appointment please ignore" );
-        vaccineAppointmentForm.setVaccine( vaccine.getCode() );
+        vaccineAppointmentForm.setVaccine( "1111-1111-11" );
 
         System.out.println( TestUtils.asJsonString( vaccineAppointmentForm ) );
 

@@ -127,10 +127,108 @@
                         }
                     }
 
+
+					var currentDay, currentMonth, currentYear, currentHour, currentMinute, currentSeconds;
+
+					function getCurrentTime() {
+						var curDate = new Date();
+						currentDay = curDate.getDate();
+						currentMonth = curDate.getMonth() + 1;
+						currentYear = curDate.getFullYear();
+						currentHour = curDate.getHours();
+						currentMinute = curDate.getMinutes();
+						currentSeconds = curDate.getSeconds();
+					}
+
+					function selectableVaccineRequest(request){
+						dateStr = request['date'].split('T')[0];
+
+						requestMonth = parseInt(dateStr.split('-')[1]);
+						requestDay = parseInt(dateStr.split('-')[2]);
+						requestYear = parseInt(dateStr.split('-')[0]);
+						
+						timeStr = request['date'].split('T')[1].split('-')[0];
+						requestHour = parseInt(timeStr.split(':')[0]);
+						requestMinutes = parseInt(timeStr.split(':')[1]);
+
+						if ( currentYear == requestYear && currentDay == requestDay && requestMonth == currentMonth){
+
+							if (currentHour >= requestHour - 3 && currentHour <= requestHour + 3) {
+
+								if ((currentHour >= requestHour - 3 && currentMinute <= requestMinutes) || (currentHour <= requestHour + 3 && currentMinute >= requestMinutes)){
+									return true;
+								}
+
+							}
+
+						}
+
+
+						return false;
+					}
+
+					// get a list of the vaccines
+					$http.get("/iTrust2/api/v1/CovidVaccines").then(
+						function (response) {
+							$scope.vaccines = response.data;
+						}
+					);
+					// get a list of the appointment requests
+					$http.get("/iTrust2/api/v1/vaccineappointmentrequests").then(
+						function (response) {
+							console.log(response.data);
+							getCurrentTime();
+							requests = [];
+
+							for (var i = 0; i < response.data.length; i++)
+								if (selectableVaccineRequest(response.data[i])) {
+									response.data[i]["title"] = requestTitle(response.data[i]);
+									requests.push(response.data[i]);
+								}
+									
+
+							$scope.vaccineRequests = requests;
+						}
+					);
+
+					// format a readable request title
+					function requestTitle(input) {
+
+						dateStr = input['date'].split('T')[0];
+
+						// Americanize date
+						month = dateStr.split('-')[1];
+						day = dateStr.split('-')[2];
+						year = dateStr.split('-')[0];
+
+						dateStr = month + "/" + day + "/" + year;
+
+
+						timeStr = input['date'].split('T')[1].split('-')[0];
+						hourStr = timeStr.split(':')[0];
+						minStr = timeStr.split(':')[1];
+						hrNum = parseInt(hourStr);
+
+						if (hrNum / 12 > 0 && hrNum != 12) {
+							timeStr = (hrNum % 12) + ":" + minStr + "PM";
+						} else if (hrNum == 12 && hrNum / 12 > 0) {
+							timeStr = "12:" + minStr + "AM";
+						} else if (hrNum == 12 && hrNum / 12 == 0) {
+							timeStr = "12:" + minStr + "PM";
+						}else {
+							timeStr = hourStr + minStr + "AM";
+						}
+
+						returnString = "Appointment for " + input['patient']['firstName'] + " " + input['patient']['lastName'] + " at " + timeStr + " on " + dateStr;
+
+						return returnString;
+					}
+
                     /*Getting a list of patients*/
                     $http.get("/iTrust2/api/v1/patients").then(
                         function (response) {
                             $scope.patients = response.data;
+							console.log($scope.patients);
                         });
                     /*Getting a list of appointment types*/
                     $http.get("/iTrust2/api/v1/appointmenttype")
@@ -155,7 +253,12 @@
                     /*Getting a list of drugs*/
                     $http.get("/iTrust2/api/v1/drugs").then(
                         function (response) {
-                            $scope.drugs = response.data;
+							$scope.drugs = [];
+							// load only generic drugs into drugs
+							for (var i = 0; i < response.data.length; i++) {
+								if (!("doseInterval" in response.data[i]))
+									$scope.drugs.push(response.data[i])
+							}
                         });
                     /*Getting a list of ICD codes*/
                     $http.get("/iTrust2/api/v1/icdcodes").then(
@@ -407,21 +510,49 @@
                                 });
 
                                 $scope.visit.labProcedures = $scope.procedures;
-                                
-                                $http({
-                                    method: 'POST',
-                                    url: '/iTrust2/api/v1/officevisits',
-                                    data: $scope.visit
+
+								
+
+								$http({
+                                	method: 'POST',
+                                	url: '/iTrust2/api/v1/officevisits',
+                                	data: $scope.visit
                                 }).then(function (response) {
-                                    $scope.errorMsg = "";
-                                    $scope.message = "Office visit created successfully";
+                                	$scope.errorMsg = "";
+                                	$scope.message = "Office visit created successfully";
                                 }, function (rejection) {
-                                    $scope.message = "";
-                                    $scope.errorMsg = "Error occurred creating office visit: " + rejection.data.message;
+                                	$scope.message = "";
+                                	$scope.errorMsg = "Error occurred creating office visit: " + rejection.data.message;
                                 })
+
+                                
+                                
                             }
-                        }
-                         else {
+                        } else if ($scope.visit.type == 'VACCINE_APPOINTMENT') {
+							$scope.visit['appointment'] = $scope.selectedVaccineAppointment['id'];
+							$scope.visit['doseNumber'] = $scope.doseNumber;
+							$scope.visit['vaccine'] = $scope.selectedVaccine['code'];
+							console.log($scope.visit);
+							$http({
+                            	method: 'POST',
+                            	url: '/iTrust2/api/v1/vaccineofficevisits',
+                            	data: $scope.visit
+                            }).then(function (response) {
+                            	$scope.errorMsg = "";
+								$scope.visit = {};
+								$scope.visit.type = "VACCINE_APPOINTMENT";
+								$scope.visitInputDate = undefined;
+								$scope.visitInputTime = undefined;
+								$scope.selectedVaccineAppointment = {};
+								$scope.doseNumber = undefined;
+								$scope.selectedVaccine = {};
+								console.log($scope.visit);
+                            	$scope.message = "Office visit created successfully";
+                            }, function (rejection) {
+                            	$scope.message = "";
+                            	$scope.errorMsg = "Error occurred creating office visit: " + rejection.data.message;
+                            })
+						} else {
                             $scope.message = "";
                             $scope.errorMsg = "Invalid office visit type";
                         }
@@ -639,7 +770,7 @@
 								<div class="row">
 
 									<!-- Basic Health Metrics Panel -->
-									<div class="col-md-4">
+									<div class="col-md-4" ng-hide="visit.type == 'VACCINE_APPOINTMENT'">
 										<div class="panel panel-info">
 											<div class="panel-heading">
 												<h4>Basic Health Metrics <span ng-show="visit.type == 'GENERAL_OPHTHALMOLOGY'">(Optional)</span></h4>
@@ -752,6 +883,34 @@
 														</div>
 													</div>
 												</div>
+											</div>
+										</div>
+									</div>
+									
+									<!-- Vaccine Appointment Visit only -->
+									<div class="col-md-4" ng-show="visit.type == 'VACCINE_APPOINTMENT'">
+										<div class="panel panel-info">
+											<div class="panel-heading">
+												<h4>Vaccine Information</h4>
+											</div>
+											<div class="panel-body">
+												<div class="form-group row">
+													<div class="col-xs-6">
+														<label>Vaccine Appointment: </label>
+														<select ng-options="request.title for request in vaccineRequests" ng-model="selectedVaccineAppointment" class="form-control"></select>
+													</div>
+													<div class="col-xs-6">
+														<label>Dose Number: </label>
+														<input type=text ng-model="doseNumber" class="form-control"/>
+													</div>
+												</div>
+												<div class="form-group row">
+													<div class="col-xs-6">
+														<label>Vaccine Type: </label>
+														<select ng-options="vaccine.name for vaccine in vaccines" ng-model="selectedVaccine" class="form-control"></select>
+													</div>
+												</div>
+												
 											</div>
 										</div>
 									</div>

@@ -95,7 +95,10 @@ public class APIEnumController extends APIController {
         }
 
         if ( role.contains( Role.ROLE_HCP ) ) {
-            return List.of( AppointmentType.GENERAL_CHECKUP );
+            return List.of( AppointmentType.GENERAL_CHECKUP, AppointmentType.VACCINE_APPOINTMENT );
+        }
+        if ( role.contains( Role.ROLE_VACCINATOR ) ) {
+            return List.of( AppointmentType.VACCINE_APPOINTMENT );
         }
 
         return Arrays.asList( AppointmentType.values() );

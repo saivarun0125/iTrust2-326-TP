@@ -93,11 +93,6 @@ public class PatientForm {
     private String  gender;
 
     /**
-     * The vaccines this patient has recieved
-     */
-    private String  vaccinesRecieved;
-
-    /**
      * Whether the patient is diabetic/pre-diabetic or not
      */
     @NotNull
@@ -159,10 +154,6 @@ public class PatientForm {
 
         if ( null != patient.getGender() ) {
             setGender( patient.getGender().toString() );
-        }
-
-        if ( null != patient.getVaccinesRecieved() ) {
-            setGender( patient.getVaccinesRecieved().toString() );
         }
 
     }
@@ -488,13 +479,5 @@ public class PatientForm {
      */
     public void setUsername ( final String username ) {
         this.username = username;
-    }
-
-    public String getVaccinesRecieved () {
-        return this.vaccinesRecieved;
-    }
-
-    public void setVaccinesRecieved ( String vaccinesRecieved ) {
-        this.vaccinesRecieved = vaccinesRecieved;
     }
 }

@@ -145,6 +145,7 @@ public class APIVaccineAppointmentRequestController extends APIController {
     @PreAuthorize ( "hasRole('ROLE_PATIENT')" )
     public ResponseEntity createVaccineAppointmentRequest (
             @RequestBody final VaccineAppointmentRequestForm vaccineRequestForm ) {
+
         try {
             final VaccineAppointmentRequest request = service.build( vaccineRequestForm );
             if ( null != service.findById( request.getId() ) ) {

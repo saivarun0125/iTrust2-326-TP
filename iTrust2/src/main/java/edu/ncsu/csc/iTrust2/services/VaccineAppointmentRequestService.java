@@ -102,10 +102,13 @@ public class VaccineAppointmentRequestService extends Service<VaccineAppointment
         ar.setComments( raf.getComments() );
 
         final ZonedDateTime requestDate = ZonedDateTime.parse( raf.getDate() );
+
         if ( requestDate.isBefore( ZonedDateTime.now() ) ) {
             throw new IllegalArgumentException( "Cannot request an appointment before the current time" );
         }
-        ar.setDate( requestDate );
+        else {
+            ar.setDate( requestDate );
+        }
         final CovidVaccine vaccine = repos.findByCode( raf.getVaccine() );
         ar.setVaccine( vaccine );
 

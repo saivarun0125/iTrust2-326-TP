@@ -176,6 +176,8 @@ public class VaccineOfficeVisitService extends Service<VaccineOfficeVisit, Long>
             }
 
         }
+
+        System.out.println( "set hospital" );
         ov.setHospital( hospitalService.findByName( ovf.getHospital() ) );
 
         final Patient p = (Patient) ov.getPatient();

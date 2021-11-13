@@ -2,7 +2,6 @@ package edu.ncsu.csc.iTrust2.forms;
 
 import javax.validation.constraints.NotEmpty;
 
-import edu.ncsu.csc.iTrust2.models.VaccineAppointmentRequest;
 import edu.ncsu.csc.iTrust2.models.VaccineOfficeVisit;
 
 /**
@@ -16,20 +15,20 @@ public class VaccineOfficeVisitForm extends OfficeVisitForm {
     /**
      * Serial Version of the Form. For the Serializable
      */
-    private static final long         serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
     /** The vaccine field for the vaccine office visit */
-    private String                    vaccine;
+    private String            vaccine;
 
     /** Which dose of the vaccine this is */
     @NotEmpty
-    private Integer                   doseNumber;
+    private Integer           doseNumber;
 
     /** Whether or not this office visit is scheduled */
-    private boolean                   scheduled;
+    private boolean           scheduled;
 
     /** The appointment request connected to this office visit */
-    private VaccineAppointmentRequest appointment;
+    private Long              appointment;
 
     /**
      * Don't use this one. For Hibernate/Thymeleaf
@@ -49,7 +48,7 @@ public class VaccineOfficeVisitForm extends OfficeVisitForm {
         setScheduled( ov.isScheduled() );
         setVaccine( ov.getVaccine().getCode() );
         setDoseNumber( ov.getDoseNumber() );
-        setAppointment( ov.getAppointment() );
+        setAppointment( ov.getAppointment().getId() );
     }
 
     /**
@@ -58,7 +57,7 @@ public class VaccineOfficeVisitForm extends OfficeVisitForm {
      * @param appointment
      *            - the appointment to set
      */
-    public void setAppointment ( final VaccineAppointmentRequest appointment ) {
+    public void setAppointment ( final Long appointment ) {
         this.appointment = appointment;
     }
 
@@ -67,7 +66,7 @@ public class VaccineOfficeVisitForm extends OfficeVisitForm {
      *
      * @return the associated appointment
      */
-    public VaccineAppointmentRequest getAppointment () {
+    public Long getAppointment () {
         return appointment;
     }
 

@@ -65,6 +65,9 @@
 					} else if (type === 'OPHTHALMOLOGY_SURGERY') {
 						// Gets all of the ophthalmologist personnel
 						$scope.getPersonnelByRole('OPH');
+					} else if (type === 'VACCINATION_APPOINTMENT') {
+						// Gets all of the vaccinator personnel
+						$scope.getPersonnelByRole(['HCP', 'VACCINATOR']);
 					} else {
 						// Gets all of the doctor personnel
 						$scope.getPersonnelByRole(['HCP']);

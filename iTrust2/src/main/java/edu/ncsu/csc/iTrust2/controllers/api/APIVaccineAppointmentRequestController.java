@@ -80,7 +80,7 @@ public class APIVaccineAppointmentRequestController extends APIController {
     @PreAuthorize ( "hasAnyRole('ROLE_PATIENT')" )
     public List<VaccineAppointmentRequest> getVaccineAppointmentRequestsForPatient () {
         final User patient = userService.findByName( LoggerUtil.currentUser() );
-        return service.findByPatient( patient ).stream().filter( e -> e.getStatus().equals( Status.PENDING ) )
+        return service.findByPatient( patient ).stream().filter( e -> e.getStatus().equals( Status.APPROVED ) )
                 .collect( Collectors.toList() );
     }
 

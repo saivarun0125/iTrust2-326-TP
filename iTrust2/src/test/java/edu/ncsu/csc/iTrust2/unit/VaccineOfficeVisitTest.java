@@ -22,6 +22,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import edu.ncsu.csc.iTrust2.TestConfig;
 import edu.ncsu.csc.iTrust2.forms.UserForm;
+import edu.ncsu.csc.iTrust2.forms.VaccineOfficeVisitForm;
 import edu.ncsu.csc.iTrust2.models.CovidVaccine;
 import edu.ncsu.csc.iTrust2.models.DoseInterval;
 import edu.ncsu.csc.iTrust2.models.Hospital;
@@ -216,7 +217,7 @@ public class VaccineOfficeVisitTest {
         try {
             vaccine2.setAgeRange( new ArrayList<Integer>() );
             visit.setVaccine( vaccine2 );
-            vaccineOfficeVisitService.build( visit );
+            vaccineOfficeVisitService.build( new VaccineOfficeVisitForm( visit ) );
             Assert.fail();
         }
         catch ( final Exception e ) {
@@ -230,7 +231,7 @@ public class VaccineOfficeVisitTest {
         try {
             vaccine2.setDoseInterval( null );
             visit.setVaccine( vaccine2 );
-            vaccineOfficeVisitService.build( visit );
+            vaccineOfficeVisitService.build( new VaccineOfficeVisitForm( visit ) );
             Assert.fail();
         }
 

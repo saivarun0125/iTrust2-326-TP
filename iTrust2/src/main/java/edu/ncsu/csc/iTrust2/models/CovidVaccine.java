@@ -1,5 +1,6 @@
 package edu.ncsu.csc.iTrust2.models;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.persistence.ElementCollection;
@@ -56,6 +57,18 @@ public class CovidVaccine extends Drug {
         setNumDoses( cf.getNumDoses() );
         setDoseInterval( cf.getDoseInterval() );
         setAgeRange( cf.getAgeRange() );
+    }
+
+    public CovidVaccine ( String code, String desc, String name, short numDoses, DoseInterval doseInterval,
+            int ageRangeBottom, int ageRangeTop ) {
+        setCode( code );
+        setDescription( desc );
+        setName( name );
+        setNumDoses( numDoses );
+        setDoseInterval( doseInterval );
+        this.ageRange = new ArrayList<Integer>();
+        this.ageRange.add( 0, ageRangeBottom );
+        this.ageRange.add( 1, ageRangeTop );
     }
 
     /**

@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Component;
 
+import edu.ncsu.csc.iTrust2.forms.VaccineOfficeVisitForm;
 import edu.ncsu.csc.iTrust2.models.AppointmentRequest;
 import edu.ncsu.csc.iTrust2.models.Patient;
 import edu.ncsu.csc.iTrust2.models.User;
@@ -35,11 +36,11 @@ public class VaccineOfficeVisitService extends Service<VaccineOfficeVisit, Long>
     @Autowired
     private VaccineOfficeVisitRepository     repository;
 
-    // /**
-    // * User service
-    // */
-    // @Autowired
-    // private UserService<User> userService;
+    /**
+     * User service
+     */
+    @Autowired
+    private UserService<User>                userService;
 
     /**
      * AppointmentRequest service
@@ -47,12 +48,12 @@ public class VaccineOfficeVisitService extends Service<VaccineOfficeVisit, Long>
     @Autowired
     private VaccineAppointmentRequestService vaccineAppointmentRequestService;
 
-    // /**
-    // * Hospital Service
-    // */
-    // @Autowired
-    // private HospitalService hospitalService;
-    //
+    /**
+     * Hospital Service
+     */
+    @Autowired
+    private HospitalService                  hospitalService;
+
     // /**
     // * BasicHealthMetrics service
     // */
@@ -129,38 +130,33 @@ public class VaccineOfficeVisitService extends Service<VaccineOfficeVisit, Long>
      *            Form to build from
      * @return Constructed VaccineOfficeVisit
      */
-    public VaccineOfficeVisit build ( final VaccineOfficeVisit ovf ) {
+    public VaccineOfficeVisit build ( final VaccineOfficeVisitForm ovf ) {
         final VaccineOfficeVisit ov = new VaccineOfficeVisit();
 
-        ov.setPatient( ovf.getPatient() );
-        ov.setHcp( ovf.getHcp() );
+        ov.setPatient( userService.findByName( ovf.getPatient() ) );
+        ov.setHcp( userService.findByName( ovf.getHcp() ) );
         ov.setNotes( ovf.getNotes() );
         ov.setDoseNumber( ovf.getDoseNumber() );
         ov.setScheduled( ovf.isScheduled() );
-        ov.setVaccine( covidVaccineService.findByCode( ovf.getVaccine().getCode() ) );
+        ov.setVaccine( covidVaccineService.findByCode( ovf.getVaccine() ) );
 
         ov.validateDoseNumber();
+        AppointmentType at = null;
+        try {
+            at = AppointmentType.valueOf( ovf.getType() );
+        }
+        catch ( final NullPointerException npe ) {
+            at = AppointmentType.VACCINE_APPOINTMENT;
+        }
+        ov.setType( at );
         ov.validateVaccine();
 
         if ( ovf.getId() != null ) {
-            ov.setId( ( ovf.getId() ) );
+            ov.setId( Long.parseLong( ovf.getId() ) );
         }
 
-        final ZonedDateTime visitDate = ovf.getDate();
+        final ZonedDateTime visitDate = ZonedDateTime.parse( ovf.getDate() );
         ov.setDate( visitDate );
-
-        AppointmentType at = null;
-        try {
-            at = ovf.getType();
-        }
-        catch ( final NullPointerException npe ) {
-            at = AppointmentType.GENERAL_CHECKUP; /*
-                                                   * If for some reason we don't
-                                                   * have a type, default to
-                                                   * general checkup
-                                                   */
-        }
-        ov.setType( at );
 
         if ( ovf.isScheduled() ) {
             final List<VaccineAppointmentRequest> requests = vaccineAppointmentRequestService
@@ -180,27 +176,7 @@ public class VaccineOfficeVisitService extends Service<VaccineOfficeVisit, Long>
             }
 
         }
-        ov.setHospital( ovf.getHospital() );
-        // ov.setBasicHealthMetrics( bhmService.build( ovf ) );
-        // ov.setOphthalmologyMetrics( omService.build( ovf ) );
-        // associate all diagnoses with this visit
-        // if ( ovf.getDiagnoses() != null ) {
-        // ov.setDiagnoses(
-        // ovf.getDiagnoses().stream().map( diagnosisService::build ).collect(
-        // Collectors.toList() ) );
-        // for ( final Diagnosis d : ov.getDiagnoses() ) {
-        // d.setVisit( ov );
-        // }
-        // }
-
-        // ov.validateDiagnoses();
-        // ov.validateOphthalmology();
-
-        // final List<PrescriptionForm> ps = ovf.getPrescriptions();
-        // if ( ps != null ) {
-        // ov.setPrescriptions( ps.stream().map( prescriptionService::build
-        // ).collect( Collectors.toList() ) );
-        // }
+        ov.setHospital( hospitalService.findByName( ovf.getHospital() ) );
 
         final Patient p = (Patient) ov.getPatient();
         if ( p == null || p.getDateOfBirth() == null ) {
@@ -222,17 +198,10 @@ public class VaccineOfficeVisitService extends Service<VaccineOfficeVisit, Long>
                 age -= 1;
             }
         }
-
-        if ( age < 3 ) {
-            ov.validateUnder3();
+        // TODO: Do Dob testing relevent to Covid Vaccines
+        if ( age < ov.getVaccine().getAgeRange().get( 0 ) || age > ov.getVaccine().getAgeRange().get( 1 ) ) {
+            throw new IllegalArgumentException( "Patient's age must be within vaccine's age range" );
         }
-        else if ( age < 12 ) {
-            ov.validateUnder12();
-        }
-        else {
-            ov.validate12AndOver();
-        }
-
         return ov;
     }
 }

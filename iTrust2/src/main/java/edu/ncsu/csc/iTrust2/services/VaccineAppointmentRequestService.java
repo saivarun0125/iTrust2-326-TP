@@ -109,8 +109,6 @@ public class VaccineAppointmentRequestService extends Service<VaccineAppointment
         final CovidVaccine vaccine = repos.findByCode( raf.getVaccine() );
         ar.setVaccine( vaccine );
 
-        ar.setVaccine( vaccine );
-
         Status s = null;
         try {
             s = Status.valueOf( raf.getStatus() );

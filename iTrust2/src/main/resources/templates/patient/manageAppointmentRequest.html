@@ -27,6 +27,7 @@
 
 			app.controller('manageAppointmentRequestCtrl', function($scope, $http, dateTimeService) {
 				$scope.appointment = {};
+				$scope.vaxAppointment = {};
 				$scope.hcps = [];
 				
 				/**
@@ -209,6 +210,7 @@
 				
 				$scope.selectedAppointment = {};
 				$scope.appointments = [];
+				$scope.vaxAppointments = [];
 				$scope.patient = /*[[${#httpServletRequest.remoteUser}]]*/null;
 				$scope.loadAppointments = function() {
 					$http.get("/iTrust2/api/v1/appointmentrequest").then(
@@ -216,22 +218,44 @@
 							$scope.appointments = response.data;
 
 							if ($scope.appointments && !$scope.appointments.length) {
-								$scope.errorMsg1 = "No appointment requests found."
+								//$scope.errorMsg1 = "No appointment requests found."
 							}
 						});
+					$http.get("/iTrust2/api/v1/vaccineappointmentrequest").then(
+							function(response) {
+								$scope.vaxAppointments = response.data;
+
+								if ($scope.vaxAppointments && !$scope.vaxAppointments.length) {
+									//$scope.errorMsg1 = "No appointment requests found."
+								}
+							});
 				}
 				
 				$scope.deleteAppointment = function() {
-					$http.delete("/iTrust2/api/v1/appointmentrequests/" + $scope.selectedAppointment.id).then(
-						function (response) {
-							$scope.message1 = "Your appointment request was successfully deleted.";
-							$scope.message = "";
-			                $scope.loadAppointments();
-			                $scope.errorMsg1 = "";
-			                $scope.selectedAppointment = {};
-			            }, function (rejection) {
-			                $scope.errorMsg1 = "Could not remove appointment";
-			            });
+					if($scope.selectedAppointment.type == 'VACCINATION_APPOINTMENT') {
+						$http.delete("/iTrust2/api/v1/vaccineappointmentrequests/" + $scope.selectedAppointment.id).then(
+								function (response) {
+									$scope.message1 = "Your appointment request was successfully deleted.";
+									$scope.message = "";
+					                $scope.loadAppointments();
+					                $scope.errorMsg1 = "";
+					                $scope.selectedAppointment = {};
+					            }, function (rejection) {
+					                $scope.errorMsg1 = "Could not remove appointment";
+					            });
+					}
+					else {
+						$http.delete("/iTrust2/api/v1/appointmentrequests/" + $scope.selectedAppointment.id).then(
+							function (response) {
+								$scope.message1 = "Your appointment request was successfully deleted.";
+								$scope.message = "";
+				                $scope.loadAppointments();
+				                $scope.errorMsg1 = "";
+				                $scope.selectedAppointment = {};
+				            }, function (rejection) {
+				                $scope.errorMsg1 = "Could not remove appointment";
+				            });
+					}
 				} 
 				
 				$scope.loadAppointments();
@@ -262,9 +286,22 @@
 											</label>
 										</span></li>
 									</ul>
+									<ul style="list-style: none; padding: 0;">
+										<li ng-repeat="vaxAppt in vaxAppointments"><span> <input
+												type="radio" ng-model="selectedAppointment.id" name="vaxAppt"
+												id="vaxAppt{{vaxAppt.id}}" value="{{vaxAppt.id}}" required="true" />
+												<label for="vaxAppt{{vaxAppt.id}}"
+												style="vertical-align: middle; padding-left: 10px; cursor: pointer;">
+													Type: {{vaxAppt.type | humanize}}<br /> Date: {{vaxAppt.date |
+													date : 'MM/dd/yyyy'}}<br /> Time: {{vaxAppt.date | date :
+													'shortTime'}}<br /> Status: {{vaxAppt.status | humanize}}
+													<br /> Vaccine type: {{ vaxAppt.vaccine.name | humanize}}
+											</label>
+										</span></li>
+									</ul>
 								</div>
 
-								<button class="btn btn-danger" ng-if="appointments.length"
+								<button class="btn btn-danger" ng-if="appointments.length || vaxAppointments.length"
 									ng-click="deleteAppointment()" name="deleteRequest">Delete</button>
 
 								<div name="success" class="text-success">{{message1}}</div>

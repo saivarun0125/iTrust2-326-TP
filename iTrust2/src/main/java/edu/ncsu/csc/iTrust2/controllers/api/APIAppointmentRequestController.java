@@ -85,8 +85,9 @@ public class APIAppointmentRequestController extends APIController {
         final User patient = userService.findByName( LoggerUtil.currentUser() );
         final List<AppointmentRequest> result = service.findByPatient( patient ).stream()
                 .filter( e -> e.getStatus().equals( Status.PENDING ) ).collect( Collectors.toList() );
-        result.addAll( vaxService.findByPatient( patient ).stream()
-                .filter( e -> e.getStatus().equals( Status.APPROVED ) ).collect( Collectors.toList() ) );
+        // result.addAll( vaxService.findByPatient( patient ).stream()
+        // .filter( e -> e.getStatus().equals( Status.APPROVED ) ).collect(
+        // Collectors.toList() ) );
         return result;
 
     }

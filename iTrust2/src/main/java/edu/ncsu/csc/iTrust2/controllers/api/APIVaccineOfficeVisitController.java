@@ -191,39 +191,14 @@ public class APIVaccineOfficeVisitController extends APIController {
                         errorResponse( "Vaccine office visit with the id " + visit.getId() + " doesn't exist" ),
                         HttpStatus.NOT_FOUND );
             }
-            // check if patient is fully vaccinated
-            final Patient patient = (Patient) visit.getPatient();
-            final int isFullyVaxxed = this.isFullyVaxxed( patient, visit.getVaccine() );
-
-            // if not fully vaxxed, vaccine may be adminisered. Add vaccine to
-            // patient's vaccines recieved.
-            if ( isFullyVaxxed == 0 ) {
-                if ( !this.correctDoseNumber( visit.getDoseNumber(), patient ) ) {
-                    return new ResponseEntity( errorResponse( "Invalid Dose Number" ), HttpStatus.CONFLICT );
-                }
-
-                vaccineOfficeVisitService.save( visit );
-                loggerUtil.log( TransactionType.VACCINE_OFFICE_VISIT_CREATE, LoggerUtil.currentUser(),
-                        visit.getPatient().getUsername() );
-                final CovidVaccine vax = visit.getVaccine();
-                // We do this so we don't get duplicates in a patient's
-                // vaccination list.
-                final VaccineDose vaxToAdd = new VaccineDose( vax.getCode(), visit.getDoseNumber(), vax.getNumDoses() );
-                patient.getVaccinesRecieved().add( vaxToAdd );
-                return new ResponseEntity( visit, HttpStatus.OK );
-            }
-            // otherwise, return an appropriate response
-            else if ( isFullyVaxxed == 1 ) {
-                return new ResponseEntity( errorResponse( "Patient is already fully vaccinated" ),
-                        HttpStatus.CONFLICT );
-            }
-            else {
-                return new ResponseEntity( errorResponse( "Patient cannot mix and match vaccines" ),
-                        HttpStatus.CONFLICT );
-            }
-
+            vaccineOfficeVisitService.save( visit );
+            loggerUtil.log( TransactionType.VACCINE_OFFICE_VISIT_CREATE, LoggerUtil.currentUser(),
+                    visit.getPatient().getUsername() );
+            return new ResponseEntity( visit, HttpStatus.OK );
         }
-        catch ( final Exception e ) {
+        catch (
+
+        final Exception e ) {
             e.printStackTrace();
             return new ResponseEntity(
                     errorResponse(

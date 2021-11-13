@@ -3,6 +3,7 @@ package edu.ncsu.csc.iTrust2.api;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -108,9 +109,12 @@ public class APIVaccineOfficeVisitTest {
 
         final Patient patient4 = buildPatient( "patient4" );
 
+        final Patient patient5 = buildPatient( "patient5" );
+
         final Patient babyPatient = buildBabyPatient( "babyPatient" );
 
-        userService.saveAll( List.of( patient, hcp, antti, patient1, patient2, patient3, patient4, babyPatient ) );
+        userService.saveAll(
+                List.of( patient, hcp, antti, patient1, patient2, patient3, patient4, patient5, babyPatient ) );
 
         final Hospital hosp = new Hospital();
         hosp.setAddress( "123 Raleigh Road" );
@@ -284,6 +288,10 @@ public class APIVaccineOfficeVisitTest {
         vList = vaccineOfficeVisitService.findByHcpAndPatient( v.getHcp(), v.getPatient() );
         assertEquals( vList.get( 0 ).getHcp(), v.getHcp() );
         assertEquals( vList.get( 0 ).getPatient(), v.getPatient() );
+
+        // check if getting vaccine office visits for HCP works
+        mvc.perform( get( "/api/v1/vaccineofficevisits/HCP" ) ).andExpect( status().isOk() )
+                .andExpect( content().contentType( MediaType.APPLICATION_JSON_VALUE ) );
 
         /*
          * We need the ID of the office visit that actually got _saved_ when
@@ -551,6 +559,52 @@ public class APIVaccineOfficeVisitTest {
 
         mvc.perform( get( "/api/v1/vaccineofficevisits" ) ).andExpect( status().isOk() )
                 .andExpect( content().contentType( MediaType.APPLICATION_JSON_VALUE ) );
+
+    }
+
+    @Test
+    @Transactional
+    @WithMockUser ( username = "hcp", roles = { "HCP" } )
+    public void testEdit () throws Exception {
+        final VaccineOfficeVisitForm visit = new VaccineOfficeVisitForm();
+        visit.setPreScheduled( "no" );
+        visit.setDate( "2030-11-19T04:50:00.000-05:00" );
+        visit.setHcp( "hcp" );
+        visit.setPatient( "patient5" );
+        visit.setNotes( "Test office visit" );
+        visit.setType( AppointmentType.VACCINE_APPOINTMENT.toString() );
+        visit.setHospital( "iTrust Test Hospital 2" );
+        visit.setVaccine( "3333-3333-33" );
+        visit.setDoseNumber( 1 );
+        visit.setScheduled( false );
+
+        /* Create the Office Visit */
+        mvc.perform( post( "/api/v1/vaccineofficevisits" ).contentType( MediaType.APPLICATION_JSON )
+                .content( TestUtils.asJsonString( visit ) ) ).andExpect( status().isOk() );
+
+        Assert.assertEquals( 1, vaccineOfficeVisitService.count() );
+
+        mvc.perform( get( "/api/v1/vaccineofficevisits" ) ).andExpect( status().isOk() )
+                .andExpect( content().contentType( MediaType.APPLICATION_JSON_VALUE ) );
+
+        final String id = vaccineOfficeVisitService.findByPatient( userService.findByName( "patient5" ) ).get( 0 )
+                .getId().toString();
+
+        visit.setId( id );
+
+        visit.setNotes( "Test office visit, changed description" );
+
+        // do a valid put, changing description
+        mvc.perform( put( "/api/v1/vaccineofficevisits/" + id ).contentType( MediaType.APPLICATION_JSON )
+                .content( TestUtils.asJsonString( visit ) ) ).andExpect( status().isOk() );
+
+        assertEquals( "Test office visit, changed description",
+                vaccineOfficeVisitService.findByPatient( userService.findByName( "patient5" ) ).get( 0 ).getNotes() );
+
+        visit.setId( null );
+        // do an invalid put
+        mvc.perform( put( "/api/v1/vaccineofficevisits/" + id ).contentType( MediaType.APPLICATION_JSON )
+                .content( TestUtils.asJsonString( visit ) ) ).andExpect( status().isNotFound() );
 
     }
 

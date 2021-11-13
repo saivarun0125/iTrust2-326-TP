@@ -107,11 +107,19 @@
 					<td style="vertical-align: top">
 						<h3>Upcoming Medical Appointment</h3>
 						<ul style="list-style: none;">
-							<li ng-repeat="appt in incomingAppointments"><label>
+							<li ng-repeat="appt in incomingAppointments">
+							<label ng-if="appt.type != 'VACCINE_APPOINTMENT'" >
 									Type: {{appt.type | humanize}} <br /> Date: {{appt.date | date
 									: 'MM/dd/yyyy'}} <br /> Time: {{appt.date | date :
 									'shortTime'}} <br /> Patient: {{appt.patient.username}}
-							</label></li>
+							</label>
+							<label ng-if="appt.type == 'VACCINE_APPOINTMENT'">
+									Type: {{appt.type | humanize}} <br /> Date: {{appt.date |
+									date : 'MM/dd/yyyy'}} <br /> Time: {{appt.date | date :
+									'shortTime'}} <br /> Patient: {{appt.patient.username}}
+									<br /> Vaccine type: {{ appt.vaccine.name | humanize}}
+							</label>
+							</li>
 						</ul>
 						<div name="errorMsg1" class="text-danger">{{errorMsg1}}</div>
 					</td>

@@ -142,7 +142,7 @@ public class APIVaccineAppointmentRequestController extends APIController {
      *         provided
      */
     @PostMapping ( BASE_PATH + "/vaccineappointmentrequests" )
-    @PreAuthorize ( "hasRole('ROLE_PATIENT')" )
+    @PreAuthorize ( "hasAnyRole('ROLE_PATIENT', 'ROLE_HCP', 'ROLE_VACCINATOR')" )
     public ResponseEntity createVaccineAppointmentRequest (
             @RequestBody final VaccineAppointmentRequestForm vaccineRequestForm ) {
 
@@ -174,6 +174,7 @@ public class APIVaccineAppointmentRequestController extends APIController {
     @DeleteMapping ( BASE_PATH + "/vaccineappointmentrequests/{id}" )
     @PreAuthorize ( "hasAnyRole('ROLE_HCP', 'ROLE_PATIENT')" )
     public ResponseEntity deleteVaccineAppointmentRequest ( @PathVariable final Long id ) {
+        System.out.println( "Id of vaccine  appontment request: " + id );
         final VaccineAppointmentRequest request = service.findById( id );
         if ( null == request ) {
             return new ResponseEntity( errorResponse( "No AppointmentRequest found for id " + id ),

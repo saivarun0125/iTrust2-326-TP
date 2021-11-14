@@ -80,12 +80,12 @@
     			}
     			
     			
-        		
+        		// check for the interval type and interval amount if the dose number required is more than 1
     			if ("doseInterval" in drug) {
     				if ("intervalAmount" in drug.doseInterval) {
     					// check to make sure that the interval amount is a number
                 		if (isNaN(drug.doseInterval['intervalAmount'])) {
-                			err.push("Interval amount must be a numbers");
+                			err.push("Interval amount must be a number");
                 		}
     				} else {
     					err.push("Please enter an interval amount");
@@ -96,7 +96,9 @@
             		if (drug && drug.doseInterval['intervalType'] == null) {
             			err.push("An interval type needs to be selected");
             		}
-    			} else {
+    			} else if (drug.numDoses == 1) {
+					// do nothing
+				} else {
     				err.push("Please select an interval type and enter an interval amount");
     			}
     			

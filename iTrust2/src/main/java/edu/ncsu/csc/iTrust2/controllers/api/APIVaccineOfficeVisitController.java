@@ -118,6 +118,8 @@ public class APIVaccineOfficeVisitController extends APIController {
     @PreAuthorize ( "hasAnyRole('ROLE_HCP')" )
     public ResponseEntity createVaccineOfficeVisit ( @RequestBody final VaccineOfficeVisitForm visitForm ) {
         try {
+            System.out.println( visitForm.getDate() );
+
             final VaccineOfficeVisit visit = vaccineOfficeVisitService.build( visitForm );
 
             if ( null != visit.getId() && vaccineOfficeVisitService.existsById( visit.getId() ) ) {

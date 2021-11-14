@@ -172,11 +172,9 @@ public class APIVaccineAppointmentRequestTest {
         vaccineAppointmentForm.setComments( "Test appointment please ignore" );
         vaccineAppointmentForm.setVaccine( "1111-1111-11" );
 
-        System.out.println( TestUtils.asJsonString( vaccineAppointmentForm ) );
-
         /* Create the request */
         mvc.perform( post( "/api/v1/vaccineappointmentrequests" ).contentType( MediaType.APPLICATION_JSON )
-                .content( TestUtils.asJsonString( vaccineAppointmentForm ) ) );
+                .content( TestUtils.asJsonString( vaccineAppointmentForm ) ) ).andExpect( status().isOk() );
 
         mvc.perform( get( "/api/v1/vaccineappointmentrequest" ) ).andExpect( status().isOk() )
                 .andExpect( content().contentType( MediaType.APPLICATION_JSON_VALUE ) );
@@ -209,8 +207,33 @@ public class APIVaccineAppointmentRequestTest {
         // Updating a nonexistent ID should not work
         mvc.perform( put( "/api/v1/vaccineappointmentrequests/-1" ).contentType( MediaType.APPLICATION_JSON )
                 .content( TestUtils.asJsonString( vaccineAppointmentForm ) ) ).andExpect( status().isNotFound() );
+        // bad request test
+        mvc.perform( put( "/api/v1/vaccineappointmentrequests/notAnID" ).contentType( MediaType.APPLICATION_JSON )
+                .content( TestUtils.asJsonString( vaccineAppointmentForm ) ) ).andExpect( status().isBadRequest() );
 
         mvc.perform( delete( "/api/v1/vaccineappointmentrequests/" + id ) ).andExpect( status().isOk() );
+        // bad request test
+        mvc.perform( delete( "/api/v1/vaccineappointmentrequests/notAnID" ) ).andExpect( status().isBadRequest() );
+    }
+
+    /**
+     * Tests VaccineAppointmentRequest API
+     *
+     * @throws Exception
+     */
+    @Test
+    @WithMockUser ( username = "hcp", roles = { "HCP" } )
+    @Transactional
+    public void testVaccineAppointmentRequestHCPAPI () throws Exception {
+
+        mvc.perform( get( "/api/v1/vaccineappointmentrequests" ) ).andExpect( status().isOk() )
+                .andExpect( content().contentType( MediaType.APPLICATION_JSON_VALUE ) );
+
+        mvc.perform( get( "/api/v1/vaccineappointmentrequestForHCP" ) ).andExpect( status().isOk() )
+                .andExpect( content().contentType( MediaType.APPLICATION_JSON_VALUE ) );
+
+        mvc.perform( get( "/api/v1/vaccineAppointments" ) ).andExpect( status().isOk() )
+                .andExpect( content().contentType( MediaType.APPLICATION_JSON_VALUE ) );
 
     }
 

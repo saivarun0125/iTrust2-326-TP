@@ -480,5 +480,4 @@ public class PatientForm {
     public void setUsername ( final String username ) {
         this.username = username;
     }
-
 }

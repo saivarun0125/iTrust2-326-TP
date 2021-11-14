@@ -33,37 +33,11 @@ import edu.ncsu.csc.iTrust2.models.enums.Status;
 public class AppointmentRequest extends DomainObject {
 
     /**
-     * Used so that Hibernate can construct and load objects
-     */
-    public AppointmentRequest () {
-    }
-
-    /**
      * ID of the AppointmentRequest
      */
     @Id
     @GeneratedValue ( strategy = GenerationType.AUTO )
     private Long id;
-
-    /**
-     * Sets the ID of the AppointmentRequest
-     *
-     * @param id
-     *            The new ID of the AppointmentRequest. For Hibernate.
-     */
-    public void setId ( final Long id ) {
-        this.id = id;
-    }
-
-    /**
-     * Returns the id of the AppointmentRequest
-     *
-     * @return ID of the AppointmentRequest
-     */
-    @Override
-    public Long getId () {
-        return this.id;
-    }
 
     /**
      * The Patient who is associated with this AppointmentRequest
@@ -100,6 +74,44 @@ public class AppointmentRequest extends DomainObject {
     private AppointmentType type;
 
     /**
+     * Any (optional) comments on the AppointmentRequest
+     */
+    private String comments;
+
+    /**
+     * The Status of the AppointmentRequest
+     */
+    @NotNull
+    @Enumerated ( EnumType.STRING )
+    private Status status;
+
+    /**
+     * Used so that Hibernate can construct and load objects
+     */
+    public AppointmentRequest () {
+    }
+
+    /**
+     * Sets the ID of the AppointmentRequest
+     *
+     * @param id
+     *            The new ID of the AppointmentRequest. For Hibernate.
+     */
+    public void setId ( final Long id ) {
+        this.id = id;
+    }
+
+    /**
+     * Returns the id of the AppointmentRequest
+     *
+     * @return ID of the AppointmentRequest
+     */
+    @Override
+    public Long getId () {
+        return this.id;
+    }
+
+    /**
      * Retrieve the Status of this AppointmentRequest
      *
      * @return The Status of this AppointmentRequest
@@ -117,18 +129,6 @@ public class AppointmentRequest extends DomainObject {
     public void setStatus ( final Status status ) {
         this.status = status;
     }
-
-    /**
-     * Any (optional) comments on the AppointmentRequest
-     */
-    private String comments;
-
-    /**
-     * The Status of the AppointmentRequest
-     */
-    @NotNull
-    @Enumerated ( EnumType.STRING )
-    private Status status;
 
     /**
      * Retrieves the User object for the Patient for the AppointmentRequest

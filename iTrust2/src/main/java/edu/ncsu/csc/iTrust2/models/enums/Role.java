@@ -41,7 +41,14 @@ public enum Role {
     /**
      * Virologist
      */
-    ROLE_VIROLOGIST ( 8, "hcp/index" );
+    ROLE_VIROLOGIST ( 8, "hcp/index" ),
+    
+    /**
+     * Vaccinator role, assigned the
+     * same landing page value as
+     * the other HCPs
+     */
+    ROLE_VACCINATOR ( 9, "hcp/index" );
 
     /**
      * Numeric code of the Role

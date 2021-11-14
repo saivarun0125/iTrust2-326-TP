@@ -557,6 +557,46 @@ public enum TransactionType {
      * Virologist views R0 value
      */
     VIROLOGIST_VIEW_RNAUGHT ( 3001, "Virologist views calculated R0 value", false ),
+    /**
+     * Admin created a new drug
+     */
+    COVID_VACCINE_CREATE ( 3100, "Admin created a new covid vaccine", true ),
+    /**
+     * Admin edited an existing drug
+     */
+    COVID_VACCINE_EDIT ( 3101, "Admin edited an existing covid vaccine", true ),
+    /**
+     * Admin deleted an existing drug
+     */
+    COVID_VACCINE_DELETE ( 3102, "Admin deleted an existing covid vaccine", true ),
+    /**
+     * Admin views all drugs in the system
+     */
+    COVID_VACCINE_VIEW ( 3103, "Admin views all covid vaccines in the system", true ),
+    /**
+     * Create vaccine office visit
+     */
+    VACCINE_OFFICE_VISIT_CREATE ( 3200, "Create vaccine office visit for patient", true ),
+    /**
+     * HCP views vaccine office visit
+     */
+    VACCINE_OFFICE_VISIT_HCP_VIEW ( 3201, "View vaccine office visit by HCP", true ),
+    /**
+     * HCP edits vaccine office visit
+     */
+    VACCINE_OFFICE_VISIT_EDIT ( 3202, "HCP edits vaccine office visit", true ),
+    /**
+     * Patient views vaccine office visit
+     */
+    VACCINE_OFFICE_VISIT_PATIENT_VIEW ( 3203, "View vaccine ffice visit by Patient", true ),
+    /**
+     * Patient deleted all vaccine office visits
+     */
+    DELETE_ALL_VACCINE_OFFICE_VISITS ( 3204, "Patient deleted all vaccine office visits", false ),
+    /**
+     * someone views all vaccine office visits in the system
+     */
+    VIEW_ALL_VACCINE_OFFICE_VISITS ( 3205, "Someone views vaccine office visits in the system", true ),
 
     /**
      * When an HTTP request got intercepted, generic transaction type.

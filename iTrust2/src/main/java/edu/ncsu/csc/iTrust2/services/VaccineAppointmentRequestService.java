@@ -1,3 +1,4 @@
+
 package edu.ncsu.csc.iTrust2.services;
 
 import java.time.ZonedDateTime;
@@ -9,61 +10,71 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Component;
 
-import edu.ncsu.csc.iTrust2.forms.AppointmentRequestForm;
-import edu.ncsu.csc.iTrust2.models.AppointmentRequest;
+import edu.ncsu.csc.iTrust2.forms.VaccineAppointmentRequestForm;
+import edu.ncsu.csc.iTrust2.models.CovidVaccine;
 import edu.ncsu.csc.iTrust2.models.User;
+import edu.ncsu.csc.iTrust2.models.VaccineAppointmentRequest;
 import edu.ncsu.csc.iTrust2.models.enums.AppointmentType;
 import edu.ncsu.csc.iTrust2.models.enums.Status;
-import edu.ncsu.csc.iTrust2.repositories.AppointmentRequestRepository;
+import edu.ncsu.csc.iTrust2.repositories.CovidVaccineRepository;
+import edu.ncsu.csc.iTrust2.repositories.VaccineAppointmentRequestRepository;
 
 /**
  * Service class for interacting with AppointmentRequest model, performing CRUD
  * tasks with database and building a persistence object from a Form.
  *
- * @author Kai Presler-Marshall
+ * @author Sai Maale
  *
  */
 @Component
 @Transactional
-public class AppointmentRequestService extends Service<AppointmentRequest, Long> {
+public class VaccineAppointmentRequestService extends Service<VaccineAppointmentRequest, Long> {
 
     /** Repository for CRUD tasks */
     @Autowired
-    private AppointmentRequestRepository repository;
+    private VaccineAppointmentRequestRepository repository;
+
+    /** Repository for Vaccine CRUD tasks */
+    @Autowired
+    private CovidVaccineRepository              repos;
 
     /** UserService for CRUD operations on User */
     @Autowired
-    private UserService<User>            userService;
+    private UserService<User>                   userService;
+
+    /** VaccineService for CRUD operations on Vaccines */
+    @Autowired
+    private CovidVaccineService                 vaccineService;
 
     @Override
-    protected JpaRepository<AppointmentRequest, Long> getRepository () {
+    protected JpaRepository<VaccineAppointmentRequest, Long> getRepository () {
         return repository;
     }
 
     /**
-     * Find all appointment requests for a given Patient
+     * Find all vaccine appointment requests for a given Patient
      *
      * @param patient
      *            Patient for lookups
      * @return Matching requests
      */
-    public List<AppointmentRequest> findByPatient ( final User patient ) {
+    public List<VaccineAppointmentRequest> findByPatient ( final User patient ) {
         return repository.findByPatient( patient );
     }
 
     /**
-     * Find all appointment requests for a given HCP
+     * Find all vaccine appointment requests for a given HCP
      *
      * @param hcp
      *            HCP for lookups
      * @return Matching requests
      */
-    public List<AppointmentRequest> findByHcp ( final User hcp ) {
+    public List<VaccineAppointmentRequest> findByHcp ( final User hcp ) {
         return repository.findByHcp( hcp );
     }
 
     /**
-     * Find all appointment requests for a given HCP and patient
+     * Find all vaccine appointment requests for a given HCP and patient
      *
      * @param hcp
      *            HCP for lookups
@@ -71,29 +82,35 @@ public class AppointmentRequestService extends Service<AppointmentRequest, Long>
      *            Patient for lookups
      * @return Matching requests
      */
-    public List<AppointmentRequest> findByHcpAndPatient ( final User hcp, final User patient ) {
+    public List<VaccineAppointmentRequest> findByHcpAndPatient ( final User hcp, final User patient ) {
         return repository.findByHcpAndPatient( hcp, patient );
     }
 
     /**
-     * Builds an AppointmentRequest from the deserialised form
+     * Builds a VaccineAppointmentRequest
      *
      * @param raf
      *            AppointmentRequestForm containing data to build an AR from
      * @return Built AppointmentRequest
      */
-    public AppointmentRequest build ( final AppointmentRequestForm raf ) {
-        final AppointmentRequest ar = new AppointmentRequest();
+    public VaccineAppointmentRequest build ( final VaccineAppointmentRequestForm raf ) {
+        final VaccineAppointmentRequest ar = new VaccineAppointmentRequest();
 
         ar.setPatient( userService.findByName( raf.getPatient() ) );
         ar.setHcp( userService.findByName( raf.getHcp() ) );
+
         ar.setComments( raf.getComments() );
 
         final ZonedDateTime requestDate = ZonedDateTime.parse( raf.getDate() );
+
         if ( requestDate.isBefore( ZonedDateTime.now() ) ) {
             throw new IllegalArgumentException( "Cannot request an appointment before the current time" );
         }
-        ar.setDate( requestDate );
+        else {
+            ar.setDate( requestDate );
+        }
+        final CovidVaccine vaccine = repos.findByCode( raf.getVaccine() );
+        ar.setVaccine( vaccine );
 
         Status s = null;
         try {

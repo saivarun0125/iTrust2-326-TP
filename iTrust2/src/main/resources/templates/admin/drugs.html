@@ -28,80 +28,354 @@
     		}
     		if (!/^\d{4}-\d{4}-\d{2}$/.test(drug.code)) {
     			err.push("Code must be in the format XXXX-XXXX-XX");
+    		} else {
+    			// check if the ndc already exists
+    			
+    			var dupNDC = false;
+    			
+    			for (const key in $scope.drugs) {
+    				if ($scope.drugs[key].code === drug.code)
+    					dupNDC = true;
+    			}
+    			
+    			for (const key in $scope.vaccines) {
+    				if ($scope.vaccines[key].code === drug.code)
+    					dupNDC = true;
+    			}
+    			
+    			if (dupNDC && !($scope.edit))
+    				err.push("Code already used by a drug or vaccine.")
+    			
     		}
+    		
+    		var vaccineForm = true;
+    		
+    		var isntNumDoses = !("numDoses" in drug) || drug.numDoses === null || drug.numDoses === "";
+    		var isntDoseInterval = !('doseInterval' in drug) || !("intervalType" in drug.doseInterval && "intervalAmount" in drug.doseInterval) || (drug.doseInterval["intervalType"] === "" && drug.doseInterval['intervalAmount'] === "");
+    		var isntAgeRange = !("ageRange" in drug) || drug.ageRange === null || drug.ageRange === "";
+    		
+    		
+    		if (isntNumDoses && isntDoseInterval && isntAgeRange) {
+    			vaccineForm = false;
+    			$scope.isVaccine = false;
+    		} else {
+    			vaccineForm = true;
+    			$scope.isVaccine = true;
+    		}
+    		
+    		if (vaccineForm) {
+    			
+    			if ("numDoses" in drug) {
+    				// check to make sure that the number of doses is numerical
+            		if (isNaN(drug.numDoses)) {
+            			err.push("Number of doses must be a number");
+            		} else {
+            			// if the number of doses is a number, make sure that it's between 1-9
+            			if (drug.numDoses < 1 || drug.numDoses > 9) {
+            				err.push("Number of doses must be between 1 and 9")
+            			}
+            		}
+    			} else {
+    				err.push("Please enter a number of doses");
+    			}
+    			
+    			
+        		// check for the interval type and interval amount if the dose number required is more than 1
+    			if ("doseInterval" in drug) {
+    				if ("intervalAmount" in drug.doseInterval) {
+    					// check to make sure that the interval amount is a number
+                		if (isNaN(drug.doseInterval['intervalAmount'])) {
+                			err.push("Interval amount must be a number");
+                		}
+    				} else {
+    					err.push("Please enter an interval amount");
+    				}
+    				
+            		
+            		// check to make sure that an interval type was chosen
+            		if (drug && drug.doseInterval['intervalType'] == null) {
+            			err.push("An interval type needs to be selected");
+            		}
+    			} else if (drug.numDoses == 1) {
+					// do nothing
+				} else {
+    				err.push("Please select an interval type and enter an interval amount");
+    			}
+    			
+        		
+        		
+        		// check to make sure age range is defined
+        		if ("ageRange" in drug) {
+        			// check to make sure that the age range is in format: number-number
+            		if (!/^\d+-\d+$/.test(drug.ageRange)) {
+            			err.push("Age Range isn't in the format NUMBER-NUMBER");
+            		} else {
+            			
+            			var errorCode = validAgeRange(drug.ageRange);
+            			
+            			// if the age range is in a valid format, check to make sure the numbers are above 0
+            			if (errorCode === 0) {
+            				err.push("Minimum age in the age range must be greater than 0");
+            			} else if (errorCode === 1) {
+            				err.push("Maximum age in the age range must be greater than 0");
+            			} else if (errorCode === 3) {
+            				err.push("Age range's MINAGE must be less than MAXAGE")
+            			}
+            			
+            		}
+        		} else {
+        			err.push("Please enter an age range");
+        		}
+    		}
+    		
     		return err.join(". ");
     	}
 
         $scope.drugs = [];
+        $scope.vaccines = [];
         $scope.loadTable = function () {
           $http.get("/iTrust2/api/v1/drugs").then(
             function (response) {
-              $scope.drugs = response.data;
+              $scope.drugs = [];
+              $scope.vaccines = [];
+              response.data.forEach((element) => {
+            	  if (isVaccine(element)) {
+            		  $scope.vaccines.push(element);
+            	  } else {
+            		  $scope.drugs.push(element);
+            	  }	  
+              });
+              // $scope.drugs = response.data;
               $scope.message = "";
             }, function (rejection) {
               $scope.drugs = [];
               $scope.message = "Could not display drugs";
             });
         }
+        
+         
+        
 
         $scope.addDrug = function () {
+          $scope.edit = false;
           var err = checkValidDrug($scope.drug);
-          if (err) {
-            $scope.errorAdding = err;
+          if ($scope.isVaccine) {
+        	  if ("ageRange" in $scope.drug) {
+        		  var oldAgeRange = $scope.drug.ageRange;
+                  ageRangeParser($scope.drug.ageRange);
+        	  }
+        	  
+              if (err) {
+                  $scope.errorAdding = err;
+                  if ("ageRange" in $scope.drug)
+                  	$scope.drug.ageRange = oldAgeRange;
+                } else {
+                  $http.post("/iTrust2/api/v1/CovidVaccines", $scope.drug).then(
+                    function (response) {
+                      $scope.loadTable();
+                      $scope.drug.name = "";
+                      $scope.drug.numDoses = "";
+                      $scope.drug.doseInterval = {};
+                      $scope.drug.ageRange = ""; 
+                      $scope.drug.code = "";
+                      $scope.drug.description = "";
+                      $scope.errorAdding = "";
+                    }, function (rejection) {
+                      $scope.errorAdding = "Could not add drug";
+                    });
+                }
           } else {
-            $http.post("/iTrust2/api/v1/drugs", $scope.drug).then(
-              function (response) {
-                $scope.loadTable();
-                $scope.drug.name = "";
-                $scope.drug.code = "";
-                $scope.drug.description = "";
-                $scope.errorAdding = "";
-              }, function (rejection) {
-                $scope.errorAdding = "Could not add drug";
-              });
+        	  if (err) {
+                  $scope.errorAdding = err;
+                } else {
+                  $http.post("/iTrust2/api/v1/drugs", $scope.drug).then(
+                    function (response) {
+                      $scope.loadTable();
+                      $scope.drug.name = "";
+                      $scope.drug.code = "";
+                      $scope.drug.description = "";
+                      $scope.errorAdding = "";
+                    }, function (rejection) {
+                      $scope.errorAdding = "Could not add drug";
+                    });
+                }
           }
+          
+          
 
         }
 
         $scope.deleteDrug = function (drug) {
-          $http.delete('/iTrust2/api/v1/drugs/' + drug.id).then(
-            function (response) {
-              $scope.loadTable();
-              $scope.message = "";
-            }, function (rejection) {
-              $scope.message = "Could not remove drug";
-            })
+        	if (isVaccine(drug)) {
+        		$http.delete('/iTrust2/api/v1/CovidVaccines/' + drug.id).then(
+        	            function (response) {
+        	              $scope.loadTable();
+        	              $scope.message = "";
+        	            }, function (rejection) {
+        	              $scope.message = "Could not remove drug";
+        	            });
+        	} else {
+        		$http.delete('/iTrust2/api/v1/drugs/' + drug.id).then(
+        	            function (response) {
+        	              $scope.loadTable();
+        	              $scope.message = "";
+        	            }, function (rejection) {
+        	              $scope.message = "Could not remove drug";
+        	            });
+        	}
+        	
+          
         }
 
         // gets the template to ng-include for a table row / item
         $scope.selectedDrug = {};
 
         $scope.getTemplate = function (drug) {
-          if (drug.id === $scope.selectedDrug.id) return 'edit';
-          else return 'view';
+          if (isVaccine(drug)) {
+        	  if (drug.id === $scope.selectedDrug.id) return 'editvaccine';
+              else return 'viewvaccine';
+          }	else {
+        	  if (drug.id === $scope.selectedDrug.id) return 'editdrug';
+              else return 'viewdrug';
+          }
+          
         };
+        
+        function isVaccine(drug) {
+        	if ("ageRange" in drug && "numDoses" in drug && "doseInterval" in drug) {
+      		  return true;
+      	  } else {
+      		  return false;
+      	  }	
+        }
 
         $scope.editDrug = function (drug) {
           $scope.selectedDrug = angular.copy(drug);
         };
         $scope.saveDrug = function () {
-       	  var err = checkValidDrug($scope.selectedDrug);
-          if (err) {
-            $scope.errorAdding = err;
+        	$scope.edit = true;
+          if (isVaccine($scope.selectedDrug)) {
+        	  var err = checkValidDrug($scope.selectedDrug);
+           	  var oldAgeRange = $scope.selectedDrug.ageRange;
+           	  ageRangeSelectedParser($scope.selectedDrug.ageRange)
+              if (err) {
+                $scope.errorAdding = err;
+                $scope.selectedDrug.ageRange = oldAgeRange;
+              } else {
+                $http.put("/iTrust2/api/v1/CovidVaccines", $scope.selectedDrug).then(
+                  function (response) {
+                	$scope.errorAdding = "";
+                    $scope.loadTable();
+                    $scope.resetSelected();         
+                  }, function (rejection) {
+                    $scope.errorAdding = "Failed to edit drug";
+                  });
+              }
           } else {
-            $http.put("/iTrust2/api/v1/drugs", $scope.selectedDrug).then(
-              function (response) {
-                $scope.loadTable();
-                $scope.resetSelected();         
-              }, function (rejection) {
-                $scope.errorAdding = "Failed to edit drug";
-              });
+        	  var err = checkValidDrug($scope.selectedDrug);
+              if (err) {
+                $scope.errorAdding = err;
+              } else {
+                $http.put("/iTrust2/api/v1/drugs", $scope.selectedDrug).then(
+                  function (response) {
+                	$scope.errorAdding = "";
+                    $scope.loadTable();
+                    $scope.resetSelected();
+                  }, function (rejection) {
+                    $scope.errorAdding = "Failed to edit drug";
+                  });
+              }
           }
+          
+       	  
         };
 
         $scope.resetSelected = function () {
           $scope.selectedDrug = {};
         };
+        
+        function ageRangeParser(ageRange){
+        	var ageRangeArray = ageRange.split("-");
+        	$scope.drug.ageRange = ageRangeArray;
+        }
+        
+        function validAgeRange(ageRange){
+        	var ageRangeArray = ageRange.split("-");
+        	
+        	// check to make sure that the ages are positive values and not 0
+        	if (ageRangeArray[0] <= 0)
+        		return 0;
+        	if (ageRangeArray[1] <= 0)
+        		return 1;
+        	
+        	// check to make sure that the minimum age is less than the max age
+        	if (parseInt(ageRangeArray[0]) >= parseInt(ageRangeArray[1]))
+        		return 3;
+        	
+        	return -1;
+        }
+        
+        function ageRangeSelectedParser(ageRange){
+        	var ageRangeArray = ageRange.split("-");
+        	$scope.selectedDrug.ageRange = ageRangeArray;
+        }
+        
+        $scope.editClick = function(drug) {
+        	$scope.editDrug(drug);
+        	formatAgeRange();
+        }
+        
+        function formatAgeRange(){
+        	$scope.selectedDrug.ageRange = arrayToAgeRange($scope.selectedDrug.ageRange);
+        }
+        
+        $scope.ageRangeToString = function(ageRangeArray) {
+        	if (ageRangeArray === undefined) {
+        		return "";
+        	}
+        	
+        	return ageRangeArray[0] + "-" + ageRangeArray[1];
+        }
+        
+        function arrayToAgeRange(ageRangeArray){
+        	return ageRangeArray[0] + "-" + ageRangeArray[1];
+        }
+        
+        $scope.formType = "";
+        
+        
+        $scope.loadForm = function(){
+        	if ($scope.formType === "drug") {
+        		return "drugform";
+        	} else if ($scope.formType === "vaccine") {
+        		return "vaccineform";
+        	}
+        }
+        
+        $scope.loadVaccineForm = function(){
+        	document.getElementById("btnDrugForm").style.border = "";
+        	document.getElementById("btnVaccineForm").style.border = "3px solid black";
+        	$scope.formType = "vaccine";
+        }
+        
+        $scope.loadDrugForm = function(){
+        	document.getElementById("btnDrugForm").style.border = "3px solid black";
+        	document.getElementById("btnVaccineForm").style.border = "";
+        	$scope.formType = "drug";
+        }
+        
+        $scope.checkDoses = function() {
+        	if ($scope.drug.numDoses === "1") {
+        		document.getElementById("vaccineIntervalSelect").disabled = true;
+        		document.getElementById("vaccineIntervalAmount").disabled = true;
+        	} else {
+        		document.getElementById("vaccineIntervalSelect").disabled = false;
+        		document.getElementById("vaccineIntervalAmount").disabled = false;
+        	}
+        }
+        
+        // load drug form init
+        $scope.loadDrugForm();
 
         // load table initially
         $scope.loadTable();
@@ -122,23 +396,129 @@
 							<div class="panel-body">
 								<table class="table table-bordered">
 									<caption>Existing Medications:</caption>
-									<thead>
-										<tr>
-											<th>Drug</th>
-											<th>NDC</th>
-											<th>Description</th>
-											<th>Action</th>
-										</tr>
-									</thead>
-									<tbody>
-										<tr name="drugTableRow"
-											ng-repeat="d in drugs | orderBy: 'name'"
-											ng-include="getTemplate(d)" drugId={{d.id}}>
-										</tr>
-									</tbody>
+									<tr>
+										<td>
+											<table class="table table-bordered">
+											    <caption>Drugs:</caption>
+												<thead>
+													<tr>
+														<th>Drug</th>
+														<th>NDC</th>
+														<th>Description</th>
+														<th>Action</th>
+													</tr>
+												</thead>
+												<tbody>
+													<tr name="drugTableRow"
+													ng-repeat="d in drugs | orderBy: 'name'"
+													ng-include="getTemplate(d)"
+													drugId={{d.id}}>
+													</tr>
+												</tbody>
+											</table>
+										</td>
+									</tr>
+									<tr>
+										<td>
+											<table class="table table-bordered">
+											    <caption>Vaccines:</caption>
+												<thead>
+													<tr>
+														<th>Vaccine</th>
+														<th>Doses</th>
+														<th>Interval Type</th>
+														<th>Interval Amount</th>
+														<th>Age Range</th>
+														<th>NDC</th>
+														<th>Description</th>
+														<th>Action</th>
+													</tr>
+												</thead>
+												<tbody>
+													<tr name="drugTableRow"
+													ng-repeat="d in vaccines | orderBy: 'name'"
+													ng-include="getTemplate(d)"
+													drugId={{d.id}}>
+													</tr>
+												</tbody>
+											</table>
+										</td>
+									</tr>
 								</table>
 								<!-- table in view mode -->
-								<script type="text/ng-template" id="view">
+								<script type="text/ng-template" id="viewvaccine">
+                  <td name="nameCell">{{d.name}}</td>
+
+//added these lines below
+
+				  <td name="dosesCell">{{d.numDoses}}</td>
+				  <td name="IntervalTypeCell">{{d.doseInterval['intervalType']}}</td>
+				  <td name="IntervalCell">{{d.doseInterval['intervalAmount']}}</td>
+				  <td name="AgeRangeCell">{{ageRangeToString(d.ageRange)}}</td>
+                  <td name="codeCell">{{d.code}}</td>
+                  <td name="descriptionCell">{{d.description}}</td>
+                  <td>
+                    <div class="row text-center">
+                      <div class="col-md-6">
+                        <input type="button" value="Edit" class="btn btn-primary" name="editDrug" ng-click="editClick(d)" />                         
+                      </div>
+                      <div class="col-md-6">
+                          <input type="button" value="Delete" class="btn btn-danger" name="deleteDrug" ng-click="deleteDrug(d)" />                          
+                      </div>
+                    </div>
+                  </td>
+                </script>
+
+								<!-- table in edit mode -->
+								<script type="text/ng-template" id="editvaccine">
+                  <td name="editNameCell">
+                    <input type="text" class="form-control" ng-model="selectedDrug.name" />
+                  </td>
+
+//added these lines below for edit
+				  <td name="editDosesCell">
+                    <input type="text" class="form-control" ng-model="selectedDrug.numDoses" />
+                  </td>
+
+				  <td>
+					<select class="form-control" name="intervalType" ng-model="selectedDrug.doseInterval['intervalType']">
+																<option value="DAYS">days</option>
+																<option value="WEEKS">weeks</option>
+																<option value="MONTHS">months</option>
+																<option value="YEARS">years</option>
+															</select> 
+				` </td>
+
+				  <td name="editIntervalCell">
+                    <input type="text" class="form-control" ng-model="selectedDrug.doseInterval['intervalAmount']" />
+					
+                  </td>
+				  
+
+				  <td name="editAgeRangeCell">
+                    <input type="text" class="form-control" ng-model="selectedDrug.ageRange" />
+                  </td>
+
+                  <td name="editCodeCell">
+                    <input type="text" class="form-control" ng-model="selectedDrug.code" />
+                  </td>
+                  <td name="editDescriptionCell">
+                    <input type="text" class="form-control" ng-model="selectedDrug.description" />
+                  </td>
+                  <td>
+                    <div class="row text-center">
+                      <div class="col-md-6">
+                          <input type="button" value="Save" class="btn btn-success" name="saveDrug" ng-click="saveDrug()" />                          
+                      </div>
+                      <div class="col-md-6">
+                          <input type="button" value="Cancel" class="btn btn-danger" name="cancelEdit" ng-click="resetSelected()" />                            
+                      </div>
+                    </div>
+                  </td>
+                </script>
+                
+                <!-- table in view mode -->
+								<script type="text/ng-template" id="viewdrug">
                   <td name="nameCell">{{d.name}}</td>
                   <td name="codeCell">{{d.code}}</td>
                   <td name="descriptionCell">{{d.description}}</td>
@@ -155,7 +535,7 @@
                 </script>
 
 								<!-- table in edit mode -->
-								<script type="text/ng-template" id="edit">
+								<script type="text/ng-template" id="editdrug">
                   <td name="editNameCell">
                     <input type="text" class="form-control" ng-model="selectedDrug.name" />
                   </td>
@@ -176,30 +556,90 @@
                     </div>
                   </td>
                 </script>
-
-								<br>
-								<div class="row">
-									<div class="col-md-12">
-										<div class="panel panel-default">
-											<div class="panel-heading ">Add a Drug</div>
-											<div class="panel-body">
-												<form class="form-horizontal" role="form" name="addDrugForm"
+                
+                <!-- form for adding vaccine -->
+                <script type="text/ng-template" id="vaccineform">
+					<form class="form-horizontal" role="form" name="addDrugForm"
 													ng-submit="addDrug(addDrugForm.$valid)">
 													<div class="row">
 														<div class="col-md-4">
 															<label>Name</label> <input type="text"
-																class="form-control" name="drug" ng-model="drug.name"
+																class="form-control" name="drug" ng-model="$parent.drug.name"
 																required />
 														</div>
 														<div class="col-md-4">
 															<label>Code</label> <input type="text"
 																class="form-control" placeholder="xxxx-xxxx-xx"
-																name="code" ng-model="drug.code" required />
+																name="code" ng-model="$parent.drug.code" required />
 														</div>
 														<div class="col-md-4">
 															<label>Description</label>
 															<textarea class="form-control" rows="5"
-																name="description" ng-model="drug.description" required
+																name="description" ng-model="$parent.drug.description" required
+																ng-minlength="1"></textarea>
+														</div>
+
+														<div class="col-md-4">
+															<label>Doses</label> <input type="text"
+																class="form-control" placeholder="" name="doses"
+																ng-model="$parent.drug.numDoses"
+																ng-change="checkDoses()" required />
+														</div>
+
+														<div class="col-md-4">
+															<label>Interval Type</label> <select id="vaccineIntervalSelect" class="form-control"
+																name="intervalType"
+																ng-model="$parent.drug.doseInterval['intervalType']" required>
+																<option value=""></option>
+																<option value="DAYS">days</option>
+																<option value="WEEKS">weeks</option>
+																<option value="MONTHS">months</option>
+																<option value="YEARS">years</option>
+															</select>
+														</div>
+
+
+														<div class="col-md-4">
+															<label>Interval Amount</label> <input type="text" id="vaccineIntervalAmount"
+																class="form-control" name="interval"
+																ng-model="$parent.drug.doseInterval['intervalAmount']" required />
+														</div>
+
+														<div class="col-md-4">
+															<label>Age Range</label> <input type="text"
+																class="form-control" placeholder="MINAGE-MAXAGE"
+																name="range" ng-model="$parent.drug.ageRange" required />
+														</div>
+
+													</div>
+													<div class="row">
+														<div class="col-md-12 text-right">
+															<button type="submit" class="btn btn-success"
+																name="submit">Submit</button>
+														</div>
+													</div>
+												</form>
+				</script>
+				
+				<!-- form for adding drug -->
+				<script type="text/ng-template" id="drugform">
+					<form class="form-horizontal" role="form" name="addDrugForm"
+													ng-submit="addDrug(addDrugForm.$valid)">
+													<div class="row">
+														<div class="col-md-4">
+															<label>Name</label> <input type="text"
+																class="form-control" name="drug" ng-model="$parent.drug.name"
+																required />
+														</div>
+														<div class="col-md-4">
+															<label>Code</label> <input type="text"
+																class="form-control" placeholder="xxxx-xxxx-xx"
+																name="code" ng-model="$parent.drug.code" required />
+														</div>
+														<div class="col-md-4">
+															<label>Description</label>
+															<textarea class="form-control" rows="5"
+																name="description" ng-model="$parent.drug.description" required
 																ng-minlength="1"></textarea>
 														</div>
 													</div>
@@ -210,9 +650,22 @@
 														</div>
 													</div>
 												</form>
-												<div>
-													<p style="color: red" ng-model="errorAdding" id="errP">{{errorAdding}}</p>
-												</div>
+				</script>
+
+								<br>
+								<div class="row">
+									<div class="col-md-12">
+										<div class="panel panel-default">
+											<div class="panel-heading ">
+												<input type="button" value="Drug Form" class="btn btn-primary" id="btnDrugForm" name="formDrug" ng-click="loadDrugForm()" />
+												<input type="button" value="Vaccine Form" class="btn btn-primary" id="btnVaccineForm" name="formVaccine" ng-click="loadVaccineForm()" />
+											</div>
+											<div class="panel-body" ng-include="loadForm()">
+												
+												
+											</div>
+											<div>
+												<p style="color: red" ng-model="errorAdding" id="errP">{{errorAdding}}</p>
 											</div>
 										</div>
 									</div>

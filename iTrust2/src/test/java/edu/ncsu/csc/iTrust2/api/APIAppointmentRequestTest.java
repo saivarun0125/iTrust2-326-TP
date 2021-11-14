@@ -146,6 +146,8 @@ public class APIAppointmentRequestTest {
         appointmentForm.setPatient( "patient" );
         appointmentForm.setComments( "Test appointment please ignore" );
 
+        System.out.println( TestUtils.asJsonString( appointmentForm ) );
+
         /* Create the request */
         mvc.perform( post( "/api/v1/appointmentrequests" ).contentType( MediaType.APPLICATION_JSON )
                 .content( TestUtils.asJsonString( appointmentForm ) ) );

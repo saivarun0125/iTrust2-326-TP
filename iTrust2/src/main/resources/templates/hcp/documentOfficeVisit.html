@@ -317,7 +317,6 @@
 						if (isNaN($scope.doseNumber)) {
 							$scope.doseNumError = "Dose number must be a number."
 							return undefined;
-							$scope.doseNumError = "";
 						}
 
 						$http.get("/iTrust2/api/v1/vaccineofficevisits").then(
@@ -964,7 +963,9 @@
 										console.log($scope.appointment);
 										$http.put("/iTrust2/api/v1/vaccineappointmentrequests/" + requests[i].id, $scope.appointment).then( 
 										function(response) {
+												$scope.message = "";
 												$scope.message += "Follow up appointment existed for patient, updated to new time and date.\n";
+                            					$scope.message += "Office visit created successfully.";
 												$scope.recentlyModifiedRequest = response.data['id'];
 												$scope.appointment = {};
 												$scope.appointment.vaccine = $scope.selectedVaccine;
@@ -977,10 +978,10 @@
 												$scope.doseNumber = undefined;
 												$scope.selectedVaccine = {};
 												$scope.preferredVaccine = "";
-                            					$scope.message += "Office visit created successfully.";
 											}, function(rejection) {
-												$scope.errorMsg += "Could not complete appointment request"
 												$scope.message = "";
+                            					$scope.message += "Office visit created successfully.";
+												$scope.errorMsg += "Could not complete appointment request"
 											});
 										alreadyExisted = true;
 									}
@@ -996,7 +997,9 @@
 									console.log($scope.appointment);
 									$http.post("/iTrust2/api/v1/vaccineappointmentrequests", $scope.appointment).then( 
 									function(response) {
-										$scope.message += "Your appointment request has been requested successfully.\n"
+										$scope.message = "";
+										$scope.message += "Follow up appointment request has been requested successfully.\n"
+										$scope.message += "Office visit created successfully.\n";
 										$scope.recentlyModifiedRequest = response.data['id'];
 										$scope.appointment = {};
 										$scope.appointment.vaccine = $scope.selectedVaccine;
@@ -1009,11 +1012,10 @@
 										$scope.doseNumber = undefined;
 										$scope.selectedVaccine = {};
 										$scope.preferredVaccine = "";
-                            			$scope.message = "Office visit created successfully.\n";
 									}, function(rejection) {
-										$scope.errorMsg += "Could not complete appointment request"
 										$scope.message = "";
-										$scope.message1 = "";
+										$scope.message += "Office visit created successfully.";
+										$scope.errorMsg += "Could not complete appointment request"
 									});
 								}
 							});

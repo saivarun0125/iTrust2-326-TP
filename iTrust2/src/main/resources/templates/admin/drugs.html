@@ -430,6 +430,7 @@
 														<th>Interval Amount</th>
 														<th>Age Range</th>
 														<th>NDC</th>
+														<th>Available</th>
 														<th>Description</th>
 														<th>Action</th>
 													</tr>
@@ -456,6 +457,7 @@
 				  <td name="IntervalCell">{{d.doseInterval['intervalAmount']}}</td>
 				  <td name="AgeRangeCell">{{ageRangeToString(d.ageRange)}}</td>
                   <td name="codeCell">{{d.code}}</td>
+				  <td name="availableCell">{{d.available}}</td>
                   <td name="descriptionCell">{{d.description}}</td>
                   <td>
                     <div class="row text-center">
@@ -501,6 +503,9 @@
 
                   <td name="editCodeCell">
                     <input type="text" class="form-control" ng-model="selectedDrug.code" />
+                  </td>
+				  <td name="editCodeCell">
+                    <input type="checkbox" class="checkbox" ng-model="selectedDrug.available" />
                   </td>
                   <td name="editDescriptionCell">
                     <input type="text" class="form-control" ng-model="selectedDrug.description" />
@@ -609,6 +614,12 @@
 															<label>Age Range</label> <input type="text"
 																class="form-control" placeholder="MINAGE-MAXAGE"
 																name="range" ng-model="$parent.drug.ageRange" required />
+														</div>
+
+														<div class="col-md-4" style="margin-top:30px">
+															<label style="display: inline-block;">Available?: </label> <input type="checkbox"
+																class="chekcbox"
+																name="available" ng-model="$parent.drug.available"/>
 														</div>
 
 													</div>

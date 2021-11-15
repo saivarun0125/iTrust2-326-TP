@@ -179,6 +179,8 @@ public class APIAppointmentRequestController extends APIController {
     @DeleteMapping ( BASE_PATH + "/appointmentrequests/{id}" )
     @PreAuthorize ( "hasAnyRole('ROLE_HCP', 'ROLE_PATIENT')" )
     public ResponseEntity deleteAppointmentRequest ( @PathVariable final Long id ) {
+        System.out.println( "DELETE VACCINE REQUEST" );
+        System.out.println( id.toString() );
         final AppointmentRequest request = service.findById( id );
         if ( null == request ) {
             return new ResponseEntity( errorResponse( "No AppointmentRequest found for id " + id ),

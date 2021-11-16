@@ -117,6 +117,7 @@ public class APIVaccineOfficeVisitController extends APIController {
     @PostMapping ( BASE_PATH + "/vaccineofficevisits" )
     @PreAuthorize ( "hasAnyRole('ROLE_HCP')" )
     public ResponseEntity createVaccineOfficeVisit ( @RequestBody final VaccineOfficeVisitForm visitForm ) {
+        System.out.println( visitForm.getDoseNumber() );
         try {
             System.out.println( visitForm.getDate() );
 
@@ -234,6 +235,9 @@ public class APIVaccineOfficeVisitController extends APIController {
                 patientExistingDoses++;
             }
         }
+
+        System.out.println( patientExistingDoses );
+        System.out.println( doseNumber );
 
         if ( doseNumber == patientExistingDoses + 1 ) {
             return true;

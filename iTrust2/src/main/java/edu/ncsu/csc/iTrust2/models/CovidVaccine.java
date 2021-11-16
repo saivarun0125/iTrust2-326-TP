@@ -37,6 +37,9 @@ public class CovidVaccine extends Drug {
     @ElementCollection
     private List<Integer> ageRange;
 
+    /** boolean to track if the vaccine is available or not */
+    private boolean       available;
+
     /**
      * default constructor for hibernate
      */
@@ -57,36 +60,57 @@ public class CovidVaccine extends Drug {
         setNumDoses( cf.getNumDoses() );
         setDoseInterval( cf.getDoseInterval() );
         setAgeRange( cf.getAgeRange() );
+        setAvailable( cf.getAvailable() );
     }
 
     /**
-     * Constructor that builds a covid vaccine with
+
+     * constructs a covid vaccine with provided info
      *
      * @param code
-     *            code to set
+     *            NDC code for the vaccine
      * @param desc
-     *            desc to set
+     *            description of the vaccine
      * @param name
-     *            name to set
+     *            name of the vaccine
      * @param numDoses
-     *            num doses to set
+     *            number of doses for the vaccine
      * @param doseInterval
-     *            interval to set
+     *            interval for the vaccine
      * @param ageRangeBottom
-     *            range bottom to set
+     *            lower bound age for age range
      * @param ageRangeTop
-     *            range top to set
+     *            upper bound age for age range
+     * @param available
+     *            boolean for the area for covid vaccine
      */
     public CovidVaccine ( final String code, final String desc, final String name, final short numDoses,
-            final DoseInterval doseInterval, final int ageRangeBottom, final int ageRangeTop ) {
+            final DoseInterval doseInterval, final int ageRangeBottom, final int ageRangeTop,
+            final boolean available ) {
         setCode( code );
         setDescription( desc );
         setName( name );
         setNumDoses( numDoses );
         setDoseInterval( doseInterval );
+        setAvailable( available );
         this.ageRange = new ArrayList<Integer>();
         this.ageRange.add( 0, ageRangeBottom );
         this.ageRange.add( 1, ageRangeTop );
+    }
+
+    /**
+     * @return the available
+     */
+    public boolean isAvailable () {
+        return available;
+    }
+
+    /**
+     * @param available
+     *            the available to set
+     */
+    public void setAvailable ( final boolean available ) {
+        this.available = available;
     }
 
     /**

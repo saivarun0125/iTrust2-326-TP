@@ -1,6 +1,7 @@
 
 package edu.ncsu.csc.iTrust2.services;
 
+import java.time.LocalDate;
 import java.time.ZonedDateTime;
 import java.util.List;
 
@@ -12,6 +13,7 @@ import org.springframework.stereotype.Component;
 
 import edu.ncsu.csc.iTrust2.forms.VaccineAppointmentRequestForm;
 import edu.ncsu.csc.iTrust2.models.CovidVaccine;
+import edu.ncsu.csc.iTrust2.models.Patient;
 import edu.ncsu.csc.iTrust2.models.User;
 import edu.ncsu.csc.iTrust2.models.VaccineAppointmentRequest;
 import edu.ncsu.csc.iTrust2.models.enums.AppointmentType;
@@ -129,13 +131,30 @@ public class VaccineAppointmentRequestService extends Service<VaccineAppointment
             at = AppointmentType.valueOf( raf.getType() );
         }
         catch ( final NullPointerException npe ) {
-            at = AppointmentType.GENERAL_CHECKUP; /*
-                                                   * If for some reason we don't
-                                                   * have a type, default to
-                                                   * general checkup
-                                                   */
+            at = AppointmentType.VACCINE_APPOINTMENT;
         }
         ar.setType( at );
+
+        final Patient p = (Patient) ar.getPatient();
+        if ( p == null || p.getDateOfBirth() == null ) {
+            return ar; // we're done, patient can't be tested against
+        }
+
+        final LocalDate dob = p.getDateOfBirth();
+        int age = ar.getDate().getYear() - dob.getYear();
+        // Remove the -1 when changing the dob to OffsetDateTime
+        if ( ar.getDate().getMonthValue() < dob.getMonthValue() ) {
+            age -= 1;
+        }
+        else if ( ar.getDate().getMonthValue() == dob.getMonthValue() ) {
+            if ( ar.getDate().getDayOfMonth() < dob.getDayOfMonth() ) {
+                age -= 1;
+            }
+        }
+        // TODO: Do Dob testing relevent to Covid Vaccines
+        if ( age < ar.getVaccine().getAgeRange().get( 0 ) || age > ar.getVaccine().getAgeRange().get( 1 ) ) {
+            throw new IllegalArgumentException( "Patient's age must be within vaccine's age range" );
+        }
 
         return ar;
     }

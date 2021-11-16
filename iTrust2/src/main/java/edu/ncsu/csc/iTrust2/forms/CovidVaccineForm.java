@@ -27,6 +27,9 @@ public class CovidVaccineForm extends DrugForm {
      */
     private List<Integer> ageRange;
 
+    /** true if the vaccine is available */
+    private boolean       available;
+
     /**
      * Empty constructor for filling in fields without a CovidVaccine object.
      */
@@ -47,6 +50,25 @@ public class CovidVaccineForm extends DrugForm {
         setNumDoses( vaccine.getNumDoses() );
         setDoseInterval( vaccine.getDoseInterval() );
         setAgeRange( vaccine.getAgeRange() );
+    }
+
+    /**
+     * returns if vaccine is available
+     *
+     * @return the available
+     */
+    public boolean getAvailable () {
+        return available;
+    }
+
+    /**
+     * sets if the vaccine is available
+     *
+     * @param available
+     *            the available to set
+     */
+    public void setAvailable ( final boolean available ) {
+        this.available = available;
     }
 
     /**

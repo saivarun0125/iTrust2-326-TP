@@ -1,5 +1,6 @@
 package edu.ncsu.csc.iTrust2.controllers.api;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -17,13 +18,17 @@ import org.springframework.web.bind.annotation.RestController;
 
 import edu.ncsu.csc.iTrust2.forms.VaccineAppointmentRequestForm;
 import edu.ncsu.csc.iTrust2.models.AppointmentRequest;
+import edu.ncsu.csc.iTrust2.models.CovidVaccine;
+import edu.ncsu.csc.iTrust2.models.Patient;
 import edu.ncsu.csc.iTrust2.models.User;
 import edu.ncsu.csc.iTrust2.models.VaccineAppointmentRequest;
+import edu.ncsu.csc.iTrust2.models.VaccineOfficeVisit;
 import edu.ncsu.csc.iTrust2.models.enums.Role;
 import edu.ncsu.csc.iTrust2.models.enums.Status;
 import edu.ncsu.csc.iTrust2.models.enums.TransactionType;
 import edu.ncsu.csc.iTrust2.services.UserService;
 import edu.ncsu.csc.iTrust2.services.VaccineAppointmentRequestService;
+import edu.ncsu.csc.iTrust2.services.VaccineOfficeVisitService;
 import edu.ncsu.csc.iTrust2.utils.LoggerUtil;
 
 /**
@@ -45,6 +50,9 @@ public class APIVaccineAppointmentRequestController extends APIController {
      */
     @Autowired
     private VaccineAppointmentRequestService service;
+
+    @Autowired
+    private VaccineOfficeVisitService        vaccineOfficeVisitService;
 
     /** LoggerUtil */
     @Autowired
@@ -80,7 +88,7 @@ public class APIVaccineAppointmentRequestController extends APIController {
     @PreAuthorize ( "hasAnyRole('ROLE_PATIENT')" )
     public List<VaccineAppointmentRequest> getVaccineAppointmentRequestsForPatient () {
         final User patient = userService.findByName( LoggerUtil.currentUser() );
-        return service.findByPatient( patient ).stream().filter( e -> e.getStatus().equals( Status.PENDING ) )
+        return service.findByPatient( patient ).stream().filter( e -> e.getStatus().equals( Status.APPROVED ) )
                 .collect( Collectors.toList() );
     }
 
@@ -142,7 +150,7 @@ public class APIVaccineAppointmentRequestController extends APIController {
      *         provided
      */
     @PostMapping ( BASE_PATH + "/vaccineappointmentrequests" )
-    @PreAuthorize ( "hasAnyRole('ROLE_PATIENT', 'ROLE_HCP', 'ROLE_VACCINATOR')" )
+    @PreAuthorize ( "hasAnyRole('ROLE_PATIENT')" )
     public ResponseEntity createVaccineAppointmentRequest (
             @RequestBody final VaccineAppointmentRequestForm vaccineRequestForm ) {
 
@@ -153,13 +161,64 @@ public class APIVaccineAppointmentRequestController extends APIController {
                         errorResponse( "AppointmentRequest with the id " + request.getId() + " already exists" ),
                         HttpStatus.CONFLICT );
             }
-            service.save( request );
-            loggerUtil.log( TransactionType.APPOINTMENT_REQUEST_SUBMITTED, request.getPatient(), request.getHcp() );
-            return new ResponseEntity( request, HttpStatus.OK );
+            if ( !this.isVaccinated( (Patient) request.getPatient(), request.getVaccine() ) ) {
+                if ( service.findByPatient( request.getPatient() ).size() >= 2 ) {
+                    return new ResponseEntity( errorResponse( "Patient already has two vaccine appointments" ),
+                            HttpStatus.CONFLICT );
+                }
+                service.save( request );
+                loggerUtil.log( TransactionType.APPOINTMENT_REQUEST_SUBMITTED, request.getPatient(), request.getHcp() );
+                return new ResponseEntity( request, HttpStatus.OK );
+            }
+            else {
+                return new ResponseEntity( errorResponse( "Patient is already fully vaccinated" ),
+                        HttpStatus.CONFLICT );
+            }
+
         }
         catch ( final Exception e ) {
-            return new ResponseEntity( errorResponse( "Error occurred while validating or saving "
-                    + vaccineRequestForm.toString() + " because of " + e.getMessage() ), HttpStatus.BAD_REQUEST );
+            return new ResponseEntity( errorResponse( e.getMessage() ), HttpStatus.BAD_REQUEST );
+        }
+    }
+
+    /**
+     * Creates an VaccineAppointmentRequest from the RequestBody provided.
+     * Record is automatically saved in the database.
+     *
+     * @param vaccineRequestForm
+     *            The VaccineAppointmentRequestForm to be parsed into an
+     *            VaccineAppointmentRequest and stored
+     * @return The parsed and validated AppointmentRequest created from the Form
+     *         provided, HttpStatus.CONFLICT if a Request already exists with
+     *         the ID of the provided request, or HttpStatus.BAD_REQUEST if
+     *         another error occurred while parsing or saving the Request
+     *         provided
+     */
+    @PostMapping ( BASE_PATH + "/vaccineappointmentrequestsHCP" )
+    @PreAuthorize ( "hasAnyRole('ROLE_HCP', 'ROLE_VACCINATOR')" )
+    public ResponseEntity createVaccineAppointmentRequestHCP (
+            @RequestBody final VaccineAppointmentRequestForm vaccineRequestForm ) {
+
+        try {
+            final VaccineAppointmentRequest request = service.build( vaccineRequestForm );
+            if ( null != service.findById( request.getId() ) ) {
+                return new ResponseEntity(
+                        errorResponse( "AppointmentRequest with the id " + request.getId() + " already exists" ),
+                        HttpStatus.CONFLICT );
+            }
+            if ( !this.isVaccinated( (Patient) request.getPatient(), request.getVaccine() ) ) {
+                service.save( request );
+                loggerUtil.log( TransactionType.APPOINTMENT_REQUEST_SUBMITTED, request.getPatient(), request.getHcp() );
+                return new ResponseEntity( request, HttpStatus.OK );
+            }
+            else {
+                return new ResponseEntity( errorResponse( "Patient is already fully vaccinated" ),
+                        HttpStatus.CONFLICT );
+            }
+
+        }
+        catch ( final Exception e ) {
+            return new ResponseEntity( errorResponse( e.getMessage() ), HttpStatus.BAD_REQUEST );
         }
     }
 
@@ -276,6 +335,24 @@ public class APIVaccineAppointmentRequestController extends APIController {
         appointment.stream().map( AppointmentRequest::getPatient ).distinct().forEach( e -> loggerUtil
                 .log( TransactionType.APPOINTMENT_REQUEST_VIEWED, LoggerUtil.currentUser(), e.getUsername() ) );
         return appointment;
+    }
+
+    private boolean isVaccinated ( final Patient patient, final CovidVaccine vaccineToBeAdministered ) {
+        final ArrayList<VaccineOfficeVisit> recievedVaccines = (ArrayList<VaccineOfficeVisit>) vaccineOfficeVisitService
+                .findByPatient( patient );
+
+        int patientExistingDoses = 0;
+        for ( final VaccineOfficeVisit visit : recievedVaccines ) {
+            if ( visit.getVaccine().getCode().equals( vaccineToBeAdministered.getCode() ) ) {
+                patientExistingDoses++;
+            }
+        }
+
+        if ( patientExistingDoses == vaccineToBeAdministered.getNumDoses() ) {
+            return true;
+        }
+
+        return false;
     }
 
 }

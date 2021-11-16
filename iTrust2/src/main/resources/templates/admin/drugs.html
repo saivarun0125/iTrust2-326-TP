@@ -78,10 +78,13 @@
     			} else {
     				err.push("Please enter a number of doses");
     			}
-    			
-    			
-        		// check for the interval type and interval amount if the dose number required is more than 1
-    			if ("doseInterval" in drug) {
+
+				// if the dose number required is 1, dont add any error checking for interval type
+				if (drug.numDoses == 1) {
+					$scope.drug.doseInterval = undefined;
+				} else {
+					// check for the interval type and interval amount if the dose number required is more than 1
+					if ("doseInterval" in drug) {
     				if ("intervalAmount" in drug.doseInterval) {
     					// check to make sure that the interval amount is a number
                 		if (isNaN(drug.doseInterval['intervalAmount'])) {
@@ -96,11 +99,13 @@
             		if (drug && drug.doseInterval['intervalType'] == null) {
             			err.push("An interval type needs to be selected");
             		}
-    			} else if (drug.numDoses == 1) {
-					// do nothing
-				} else {
-    				err.push("Please select an interval type and enter an interval amount");
-    			}
+    				} else {
+    					err.push("Please select an interval type and enter an interval amount");
+    				}
+				}
+    			
+    			
+        		
     			
         		
         		
@@ -430,6 +435,7 @@
 														<th>Interval Amount</th>
 														<th>Age Range</th>
 														<th>NDC</th>
+														<th>Available</th>
 														<th>Description</th>
 														<th>Action</th>
 													</tr>
@@ -456,6 +462,7 @@
 				  <td name="IntervalCell">{{d.doseInterval['intervalAmount']}}</td>
 				  <td name="AgeRangeCell">{{ageRangeToString(d.ageRange)}}</td>
                   <td name="codeCell">{{d.code}}</td>
+				  <td name="availableCell">{{d.available}}</td>
                   <td name="descriptionCell">{{d.description}}</td>
                   <td>
                     <div class="row text-center">
@@ -501,6 +508,9 @@
 
                   <td name="editCodeCell">
                     <input type="text" class="form-control" ng-model="selectedDrug.code" />
+                  </td>
+				  <td name="editCodeCell">
+                    <input type="checkbox" class="checkbox" ng-model="selectedDrug.available" />
                   </td>
                   <td name="editDescriptionCell">
                     <input type="text" class="form-control" ng-model="selectedDrug.description" />
@@ -609,6 +619,12 @@
 															<label>Age Range</label> <input type="text"
 																class="form-control" placeholder="MINAGE-MAXAGE"
 																name="range" ng-model="$parent.drug.ageRange" required />
+														</div>
+
+														<div class="col-md-4" style="margin-top:30px">
+															<label style="display: inline-block;">Available?: </label> <input type="checkbox"
+																class="chekcbox"
+																name="available" ng-model="$parent.drug.available"/>
 														</div>
 
 													</div>

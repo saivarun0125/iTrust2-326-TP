@@ -28,6 +28,8 @@
 
                 app.controller('documentOfficeVisitCtrl', function ($scope, $http, dateTimeService) {
 
+					$scope.errorMsg = "";
+
                     /*method for checking added perscriptions for vailidity*/
                     var checkValidPrescription = function (p) {
                         var err = [];
@@ -144,10 +146,10 @@
 							var intervalAmount = parseInt($scope.selectedVaccine.doseInterval.intervalAmount);
 							var intervalType = $scope.selectedVaccine.doseInterval.intervalType;
 
-							var aptDate = new Date();
+							var aptDate = new Date($scope.visitInputDateTime);
 
 							if (intervalType == 'DAYS') {
-								aptDate.setDate(aptGate.getDate() + intervalAmount);
+								aptDate.setDate(aptDate.getDate() + intervalAmount);
 							} else if (intervalType == 'WEEKS') {
 								aptDate.setDate(aptDate.getDate() + (intervalAmount * 7));
 							} else if (intervalType == "MONTHS") {
@@ -156,11 +158,9 @@
 								aptDate.setFullYear(aptDate.getFullYear() + intervalAmount);
 							}
 
-							var followupDate = aptDate.getFullYear() + '-' + (aptDate.getMonth() + 1) + '-' + aptDate.getDate(); 
-
-							$scope.inputDate = aptDate;
 							aptDate.setMilliseconds(0);
 							aptDate.setSeconds(0);
+
 							$scope.inputDateTime = aptDate;
 						}
 					}
@@ -183,7 +183,6 @@
 					function selectableVaccineRequest(request){
 
 						var requestDate = new Date(request['date']);
-						var currentDate = new Date();
 						var formDateTime = new Date($scope.visitInputDateTime);
 						upperBound = new Date(formDateTime.toISOString());
 						upperBound = new Date(upperBound.setHours(upperBound.getHours() + 3));
@@ -211,7 +210,12 @@
 					// get a list of the vaccines
 					$http.get("/iTrust2/api/v1/CovidVaccines").then(
 						function (response) {
-							$scope.vaccines = response.data;
+							var vaccines = [];
+							for (var i = 0; i < response.data.length; i++) {
+								if (response.data[i]['available'])
+									vaccines.push(response.data[i]);
+							}
+							$scope.vaccines = vaccines;
 						}
 					);
 
@@ -269,16 +273,20 @@
 						return returnString;
 					}
 
+					$scope.isMixAndMatch = function() {
+						return $scope.mixAndMatchWarning != "" && $scope.mixAndMatchWarning != undefined;
+					}
+
 					function validFollowupDate(date) {
 						// make sure the date is within 24 hours of the interval date
 						if ($scope.selectedVaccine != undefined && $scope.doseNumber != undefined) {
 							var intervalAmount = parseInt($scope.selectedVaccine.doseInterval.intervalAmount);
 							var intervalType = $scope.selectedVaccine.doseInterval.intervalType;
 
-							var aptDate = new Date();
+							var aptDate = new Date($scope.visitInputDateTime);
 
 							if (intervalType == 'DAYS') {
-								aptDate.setDate(aptGate.getDate() + intervalAmount);
+								aptDate.setDate(aptDate.getDate() + intervalAmount);
 							} else if (intervalType == 'WEEKS') {
 								aptDate.setDate(aptDate.getDate() + (intervalAmount * 7));
 							} else if (intervalType == "MONTHS") {
@@ -306,16 +314,58 @@
 						}
 					}
 
+					$scope.noteFocus = function() {
+						if ($scope.mixAndMatchFullyDosed) {
+							if ($scope.visit.notes == undefined)
+								$scope.visit.notes = "";
+
+							var replaceStr = " This vaccine dose now certifies " + $scope.visit.patient + " as fully vaccinated as per the CDC and FDA's guidelines on interchangeably dosing with Covid19 vaccines.";
+
+							$scope.visit.notes = $scope.visit.notes.replace(replaceStr, '');
+						}
+						
+					}
+
+					$scope.mixAndMatchFullChange = function() {
+						if ($scope.mixAndMatchFullyDosed) {
+							if ($scope.visit.notes == undefined)
+								$scope.visit.notes = "";
+							
+							$scope.visit.notes += " This vaccine dose now certifies " + $scope.visit.patient + " as fully vaccinated as per the CDC and FDA's guidelines on interchangeably dosing with Covid19 vaccines.";
+					
+						} else {
+
+							var replaceStr = " This vaccine dose now certifies " + $scope.visit.patient + " as fully vaccinated as per the CDC and FDA's guidelines on interchangeably dosing with Covid19 vaccines.";
+
+							$scope.visit.notes = $scope.visit.notes.replace(replaceStr, '');
+						}
+					}
+
+					$scope.noteBlur = function() {
+						if ($scope.mixAndMatchFullyDosed) {
+							if ($scope.visit.notes == undefined)
+								$scope.visit.notes = "";
+
+							$scope.visit.notes += " This vaccine dose now certifies " + $scope.visit.patient + " as fully vaccinated as per the CDC and FDA's guidelines on interchangeably dosing with Covid19 vaccines.";
+						}
+					}
+
 					$scope.checkDoseNumber = function() {
 						// abort if a vaccine hasn't been selected yet
 						if ($scope.selectedVaccine == undefined || $scope.doseNumber == undefined)
 							return undefined;
 
+						// if the dose isn't a number, abort
+						if (isNaN($scope.doseNumber)) {
+							$scope.doseNumError = "Dose number must be a number."
+							return undefined;
+						}
+
 						$http.get("/iTrust2/api/v1/vaccineofficevisits").then(
 						function (response) {
 							vaccineDoses = {};
 							for (var i = 0; i < response.data.length; i++) {
-								if (response.data[i].patient.username == $scope.selectedVaccineAppointment.patient.username) {
+								if (response.data[i].patient.username == $scope.visit.patient) {
 									if (!(response.data[i].vaccine.code in vaccineDoses)) {
 										vaccineDoses[response.data[i].vaccine.code] = 1;
 									} else {
@@ -326,34 +376,214 @@
 
 							var doseNumber = $scope.doseNumber;
 
-							// if the dose number isn't 1 + the patient's current dosage, return error 
-							if (!($scope.selectedVaccine.code in vaccineDoses) && doseNumber == 1) {
-								// if the patient hasn't recieved the vaccine before the dose number should be 1
-								$scope.doseNumError = "";
-							} else if (doseNumber == 1 + vaccineDoses[$scope.selectedVaccine.code]){
-								// if the patient has recieved the vaccine before the dose number should be 1+ current dose
-								$scope.doseNumError = "";
-							} else {
-								var currentDosage;
-								if (vaccineDoses[$scope.selectedVaccine.code] == undefined) {
-									currentDosage = 0;
-								} else {
-									currentDosage = vaccineDoses[$scope.selectedVaccine.code];
-								}
-									
+							var firstName;
+							var lastName;
+							var patientDOB;
+							
 
-								// if the above criteria aren't met, something is wrong, print error
-								$scope.doseNumError = "WARNING: " + $scope.selectedVaccineAppointment.patient.firstName + " " + $scope.selectedVaccineAppointment.patient.lastName + " has " + currentDosage + " recorded doses of the " + $scope.selectedVaccine.name + " vaccine. Their next dose should be dose number " + (currentDosage + 1) + ", please confirm that they have recieved doses elsewhere before continuing.";
+							// get current patient
+							for (var i = 0; i < $scope.patients.length; i++ ) {
+								if ($scope.patients[i].username == $scope.visit.patient) {
+									firstName = $scope.patients[i].firstName;
+									lastName = $scope.patients[i].lastName;
+									patientDOB = $scope.patients[i].dateOfBirth;
+								}
 							}
 
+							// check age range
+							var lowerAgeLimit = $scope.selectedVaccine.ageRange[0];
+							var upperAgeLimit = $scope.selectedVaccine.ageRange[1];
+							var curDate = new Date();
+							patientDOB = new Date(patientDOB);
+							var patientAge = (parseInt(curDate.getFullYear())) - parseInt(patientDOB.getFullYear());
+							var validAge = lowerAgeLimit <= patientAge && patientAge <= upperAgeLimit;
 
+							var currentDosage;
+							if (vaccineDoses[$scope.selectedVaccine.code] == undefined) {
+								currentDosage = 0;
+							} else {
+								currentDosage = vaccineDoses[$scope.selectedVaccine.code];
+							}
+
+							// check if they are already vaccinated with a coivd vaccine
+							var dosedWith = [];
+							dosedWith.push($scope.selectedVaccine.name);
+							var alreadyDosed = false;
+							$scope.mixAndMatchWarning = "";
+							var keepLooping = true;
+							var fullyVaccinatedMessage = "";
+							for (var i = 0; i < $scope.vaccines.length && keepLooping; i++) {
+								if ($scope.vaccines[i].code in vaccineDoses && $scope.selectedVaccine.code != $scope.vaccines[i].code) {
+									if ($scope.vaccines[i].numDoses == vaccineDoses[$scope.vaccines[i].code])
+										fullyVaccinatedMessage += firstName + " " + lastName + " is already fully vaccinated with the " + $scope.vaccines[i].name + " vaccine.\n";
+ 									alreadyDosed = true;
+									var plural = "doses";
+									if (vaccineDoses[$scope.vaccines[i].code] == 1)
+										plural = "dose";
+
+									$scope.mixAndMatchWarning += "WARNING: " + firstName + " " + lastName + " already has " + vaccineDoses[$scope.vaccines[i].code] + " " + plural + " " + " of the " + $scope.vaccines[i].name + " vaccine.\n"
+									dosedWith.push($scope.vaccines[i].name);
+								}
+							}
+
+							if (alreadyDosed) {
+								$scope.mixAndMatchWarning += "Please review current FDA and CDC guidelines for interchangeably dosing between the";
+								for (var i = 1; i < dosedWith.length - 1; i++) {
+									$scope.mixAndMatchWarning += " " + dosedWith[i] + ",";
+								}
+								$scope.mixAndMatchWarning += " and " + dosedWith[dosedWith.length - 1];
+								$scope.mixAndMatchWarning += " vaccines.";
+							}
+								
+
+							$scope.showDoseWarningBtn = false;
+							$scope.errorMsg = $scope.errorMsg.replace("Confirm the dosage number with the patient before submitting\n", '');
+
+							// if the dose number isn't 1 + the patient's current dosage, return error 
+							if (fullyVaccinatedMessage != "") {
+								$scope.doseNumError = fullyVaccinatedMessage;
+								$scope.mixAndMatchWarning = "";
+								$scope.errorMsg = $scope.errorMsg.replace("Patient already fully vaccinated against Covid19\n", '');
+								$scope.errorMsg += "Patient already fully vaccinated against Covid19\n";
+							} else if (!($scope.selectedVaccine.code in vaccineDoses) && doseNumber == 1) {
+								// if the patient hasn't recieved the vaccine before the dose number should be 1
+								$scope.doseNumError = "";
+								$scope.errorMsg = $scope.errorMsg.replace("Invalid dose number\n", '');
+								$scope.errorMsg = $scope.errorMsg.replace("Patient already fully vaccinated against Covid19\n", '');
+							} else if (doseNumber > $scope.selectedVaccine.numDoses) {
+								var plural = "doses";
+								if (currentDosage == 1)
+									plural = "dose";
+
+								$scope.doseNumError = "The " + $scope.selectedVaccine.name + " vaccine only requires " + $scope.selectedVaccine.numDoses + " " + plural + ".";
+								$scope.errorMsg = $scope.errorMsg.replace("Invalid dose number\n", '');
+								$scope.errorMsg = $scope.errorMsg.replace("Patient already fully vaccinated against Covid19\n", '');
+								$scope.errorMsg += "Invalid dose number\n";
+							} else if (doseNumber == 1 + currentDosage){
+								// if the patient has recieved the vaccine before the dose number should be 1+ current dose
+								$scope.doseNumError = "";
+								$scope.errorMsg = $scope.errorMsg.replace("Invalid dose number\n", '');
+								$scope.errorMsg = $scope.errorMsg.replace("Patient already fully vaccinated against Covid19\n", '');
+							} else if ($scope.doseNumber <= currentDosage) {
+								var plural = "doses";
+								if (currentDosage == 1)
+									plural = "dose";
+
+
+								$scope.doseNumError = "The dose number of this visit can't be equal to or less than their current dose (" + currentDosage + " " + plural + ").";
+								$scope.errorMsg = $scope.errorMsg.replace("Invalid dose number\n", '');
+								$scope.errorMsg += "Invalid dose number\n";
+							}  else {
+								// if the above criteria aren't met, something is wrong, print error
+								$scope.doseNumError = "WARNING: " + firstName + " " + lastName + " has " + currentDosage + " recorded doses of the " + $scope.selectedVaccine.name + " vaccine. Their next dose should be dose number " + (currentDosage + 1) + ", please confirm that they have recieved doses elsewhere before continuing.";
+								$scope.unRecordedVisits = doseNumber - currentDosage - 1;
+								$scope.currentDosage = currentDosage;
+								$scope.errorMsg = $scope.errorMsg.replace("Invalid dose number\n", '');
+								$scope.errorMsg = $scope.errorMsg.replace("Confirm the dosage number with the patient before submitting\n", '');
+								$scope.errorMsg = $scope.errorMsg.replace("Patient already fully vaccinated against Covid19\n", '');
+								$scope.errorMsg += "Confirm the dosage number with the patient before submitting\n";
+								$scope.showDoseWarningBtn = true;
+							}
+							if (!validAge)
+								$scope.doseNumError = "Patient isn't withing the age range for the " + $scope.selectedVaccine.name + " vaccine.";
 						});
+					}
 
-						$scope.doseNumError;
+					var doseWarningConfirmSubmit = false;
+
+					function submitMissingDosageVisits(visit) {	
+						visit['hcp'] = /*[[${#httpServletRequest.remoteUser}]]*/null; /* Ugly hack; use this to retrieve the name of the HCP who is currently logged in.  This grabs it from Thymeleaf */
+                        visit.status = "PENDING";
+
+						// Error checking
+						if (!visit.type) {
+							$scope.errorMsg += "Please select a visit type\n";
+						}
+
+						if (!visit.hospital) {
+							$scope.errorMsg += "Please select a hospital\n";
+						}
+
+						// Validate date and time
+						var date = new Date($scope.InputDateTime);
+						if (!dateTimeService.isValidDate($scope.visitInputDateTime)) {
+							$scope.errorMsg += "Please input a valid date and time for the office visit\n";
+						}
+
+						if (visit.type == 'VACCINE_APPOINTMENT') {
+						
+							// vaccine office visit error checking
+							// vaccine appointment undefined and the appointment was prescheduled
+							if ($scope.selectedVaccineAppointment == undefined && visit.prescheduled) {
+								$scope.errorMsg += "Please select a vaccine appointment request.\n"
+							}
+						
+							// vaccine type undefined
+							if ($scope.selectedVaccine == undefined) {
+								$scope.errorMsg += "Please select a vaccine type.\n"
+							}
+						
+							// dose number is undefined
+							if ($scope.doseNumber == undefined) {
+								$scope.errorMsg += "Please enter the dose number the patient is recieving.\n"
+							} else if (isNaN($scope.doseNumber)) {
+								// dose number isn't a number
+								$scope.errorMsg += "The dose number must be a number.\n"
+							}
+
+							if ($scope.errorMsg == "" || $scope.errorMsg == undefined) {
+								if ($scope.prescheduled()) {
+									visit['appointment'] = $scope.selectedVaccineAppointment['id'];
+								} else {
+									visit['appointment'] = null;
+								}
+									
+								visit['vaccine'] = $scope.selectedVaccine['code'];
+								visit['date'] = $scope.visitInputDateTime;
+								$http({
+                            		method: 'POST',
+                            		url: '/iTrust2/api/v1/vaccineofficevisits',
+                            		data: visit
+                            	}).then(function (response) {
+                            		$scope.errorMsg = "";
+									$scope.visit.type = "VACCINE_APPOINTMENT";
+                            		$scope.message = "Office visit created successfully";
+                            	}, function (rejection) {
+									$scope.message = "";
+                            	})
+							}
+						}
+					}
+
+					function sleep(ms) {
+  						return new Promise(resolve => setTimeout(resolve, ms));
+					}
+
+					$scope.confirmDosageWarning = async function() {
+
+						$scope.errorMsg = $scope.errorMsg.replace("Confirm the dosage number with the patient before submitting\n", '');
+						$scope.doseNumError = "";
+						$scope.showDoseWarningBtn = false;
+
+						var visit = $scope.visit;
+						for (var i = 1; i <= $scope.unRecordedVisits; i++) {
+							$scope.visit['doseNumber'] = $scope.currentDosage + i + "";
+							doseWarningConfirmSubmit = true;
+							var submitVisit = {};
+							Object.assign(submitVisit, $scope.visit);
+							submitMissingDosageVisits(submitVisit);
+							$scope.visit = visit;
+							await sleep(2000);
+						}
 					}
 
 					$scope.updatePreferred = function(){
-						$scope.preferredVaccine = $scope.selectedVaccineAppointment.vaccine.name + " is preferred."
+						if ($scope.selectedVaccineAppointment.vaccine['available']) {
+							$scope.preferredVaccine = $scope.selectedVaccineAppointment.vaccine.name + " is preferred."
+						} else {
+							$scope.preferredVaccine = $scope.selectedVaccineAppointment.vaccine.name + " is preferred, but not available."
+						}
+							
 					}
 
 					$scope.checkFollowupDate = function() {
@@ -365,16 +595,17 @@
 							if (intervalAmount == 1)
 								intervalType = intervalType.substring(0, intervalType.length - 1);
 
-							$scope.followUpDateError = "Follow up appointment date must be within 24 hours of " + intervalAmount + " " + intervalType + " past the current date and time for the " + $scope.selectedVaccine.name + " vaccine.";
+							$scope.followUpDateError = "Follow up appointment date must be within 24 hours of " + intervalAmount + " " + intervalType + " past the office visit date and time for the " + $scope.selectedVaccine.name + " vaccine.";
+							$scope.errorMsg = $scope.errorMsg.replace("Invalid follow up date\n", "");
+							$scope.errorMsg += "Invalid follow up date\n";
 						} else {
 							$scope.followUpDateError = "";
+							$scope.errorMsg = $scope.errorMsg.replace("Invalid follow up date\n", "");
 						}
 					}
 
-					var withFollowup = false;
-
 					$scope.submitWithFollowup = function() {
-						withFollowup = true;
+						$scope.withFollowup = true;
 						$scope.errorMsg = "";
 
 						if ($scope.appointment.hcp == undefined) {
@@ -385,73 +616,10 @@
 							$scope.errorMsg += "Please select a valid date and time for the follow up appointment.\n"
 						}
 
-						if ($scope.errorMsg == "") {
-							// get an updated list of the appointments that are in the system
-							var requests;
-							$http.get("/iTrust2/api/v1/vaccineappointmentrequests").then(
-							function (response) {
-								requests = response.data;
-
-								for (var i = 0; i < requests.length; i++) {
-									var sameUser = requests[i].patient.username == $scope.selectedVaccineAppointment['patient']['username'];
-									var sameVaccine = requests[i].vaccine.code == $scope.selectedVaccine.code;
-									var databaseDate = new Date(requests[i].date);
-									var formDate = new Date($scope.selectedVaccineAppointment.date);
-									var isAfter = databaseDate > formDate
-
-									var alreadyExisted = false;
-
-									// if it's the same user and the same vaccine. And the existing appointment in the database is in the future
-									if (sameUser && sameVaccine && isAfter) {
-										$scope.appointment["status"] = "APPROVED";
-										$scope.appointment['date'] = $scope.inputDateTime.toISOString(); 
-										$scope.appointment['type'] = "VACCINE_APPOINTMENT";
-										$scope.appointment['patient'] = $scope.selectedVaccineAppointment['patient']['username'];
-										$http.put("/iTrust2/api/v1/vaccineappointmentrequests/" + requests[i].id, $scope.appointment).then( 
-										function(response) {
-												$scope.reqMessage = "Follow up appointment existed for patient, updated to new time and date";
-												$scope.recentlyModifiedRequest = response.data['id'];
-												$scope.appointment = {};
-												$scope.inputDateTime = undefined;
-												console.log("submit1");
-												console.trace();
-												$scope.submit();
-											}, function(rejection) {
-												$scope.errorMsg += "Could not complete appointment request"
-												$scope.message = "";
-											});
-										alreadyExisted = true;
-									}
-
-								}
-
-								// if no other appointment existed, add new appointment
-								if (!alreadyExisted) {
-									$scope.appointment["status"] = "APPROVED";
-									$scope.appointment['date'] = $scope.inputDateTime.toISOString(); 
-									$scope.appointment['type'] = "VACCINE_APPOINTMENT";
-									$scope.appointment['patient'] = $scope.selectedVaccineAppointment['patient']['username'];
-									$http.post("/iTrust2/api/v1/vaccineappointmentrequests", $scope.appointment).then( 
-									function(response) {
-										$scope.reqMessage = "Your appointment request has been requested successfully."
-										$scope.recentlyModifiedRequest = response.data['id'];
-										$scope.appointment = {};
-										$scope.inputDateTime = undefined;
-										$scope.submit();
-									}, function(rejection) {
-										$scope.errorMsg += "Could not complete appointment request"
-										$scope.message = "";
-										$scope.message1 = "";
-									});
-								}
-							});
-							
+						if ($scope.visit.patient == undefined) {
+							$scope.errorMsg += "Please select a patient.\n";
 						}
-
-						
-
-
-						
+						$scope.submit();
 					}
 
                     /*Getting a list of patients*/
@@ -687,7 +855,7 @@
                     $scope.submit = function () {
 
 						// if there is a followup appointment, save the error messages
-						if (!withFollowup){
+						if ($scope.withFollowup == false){
 							$scope.errorMsg = "";
                         	$scope.message = "";
 						}
@@ -778,48 +946,45 @@
 							}
 
 							if ($scope.errorMsg == "" || $scope.errorMsg == undefined) {
-								$scope.visit['appointment'] = $scope.selectedVaccineAppointment['id'];
-								$scope.visit['doseNumber'] = $scope.doseNumber;
-								$scope.visit['vaccine'] = $scope.selectedVaccine['code'];
-								$scope.visit['date'] = $scope.visitInputDateTime;
-								console.log($scope.visit);
+								var visit = $scope.visit;
+								if ($scope.prescheduled()) {
+									visit['appointment'] = $scope.selectedVaccineAppointment['id'];
+								} else {
+									visit['appointment'] = null;
+								}
+									
+								if (!doseWarningConfirmSubmit)
+									visit['doseNumber'] = $scope.doseNumber;
+								visit['vaccine'] = $scope.selectedVaccine['code'];
+								visit['date'] = $scope.visitInputDateTime;
 								$http({
                             		method: 'POST',
                             		url: '/iTrust2/api/v1/vaccineofficevisits',
-                            		data: $scope.visit
+                            		data: visit
                             	}).then(function (response) {
-                            		$scope.errorMsg = "";
-									$scope.visit = {};
-									$scope.visit.type = "VACCINE_APPOINTMENT";
-									$scope.visitInputDateTime = undefined;
-									$scope.selectedVaccineAppointment = {};
-									$scope.doseNumber = undefined;
-									$scope.selectedVaccine = {};
-									$scope.preferredVaccine = "";
-                            		$scope.message = "Office visit created successfully";
-                            	}, function (rejection) {
-									console.log("post failed");
-									$scope.message = "";
-
-									// try to delete the previous vaccine appointment request
-									if ($scope.recentlyModifiedRequest != undefined) {
-										deleteRequest($scope.recentlyModifiedRequest);
-									} else {
-                            			$scope.errorMsg = "Error occurred creating office visit: " + rejection.data.message;
+									// create a vaccine appointmetn request if it's a followup
+									if ($scope.withFollowup == true) {
+										createVaccineAppointmentRequest();
+									}  else {
+										$scope.errorMsg = "";
+										$scope.visit = {};
+										$scope.visit.type = "VACCINE_APPOINTMENT";
+										$scope.visitInputDateTime = undefined;
+										$scope.selectedVaccineAppointment = {};
+										$scope.doseNumber = undefined;
+										$scope.selectedVaccine = {};
+										$scope.preferredVaccine = "";
+                            			$scope.message = "Office visit created successfully";
 									}
-								
+									// reset for next submit
+									$scope.withFollowup = false;
+									doseWarningConfirmSubmit = false;
+                            	}, function (rejection) {
+									$scope.message = "";								
                             	})
 
 							} else {
-								console.log("errormessagefail");
 								$scope.message = "";
-
-								// try to delete the previous vaccine appointment request
-								if ($scope.recentlyModifiedRequest != undefined) {
-									deleteRequest($scope.recentlyModifiedRequest);
-								} else {
-                            		$scope.errorMsg = "Error occurred creating office visit: " + rejection.data.message;
-								}
 							}
 
 							
@@ -829,6 +994,92 @@
                         }
 
                     } //end submit function
+
+					function createVaccineAppointmentRequest() {
+						if ($scope.errorMsg == "") {
+							// get an updated list of the appointments that are in the system
+							var requests;
+							$http.get("/iTrust2/api/v1/vaccineappointmentrequests").then(
+							function (response) {
+								requests = response.data;
+
+								// for (var i = 0; i < requests.length; i++) {
+								// 	var sameUser = requests[i].patient.username == $scope.visit.patient;
+								// 	var sameVaccine = requests[i].vaccine.code == $scope.selectedVaccine.code;
+								// 	var databaseDate = new Date(requests[i].date);
+								// 	var formDate = new Date($scope.visit.date);
+								// 	console.log(databaseDate);
+								// 	console.log(formDate)
+								// 	var isAfter = databaseDate > formDate
+
+								// 	var alreadyExisted = false;
+
+								// 	// if it's the same user and the same vaccine. And the existing appointment in the database is in the future
+								// 	// if (sameUser && sameVaccine && isAfter) {
+								// 	// 	$scope.appointment["status"] = "APPROVED";
+								// 	// 	$scope.appointment['date'] = $scope.inputDateTime.toISOString(); 
+								// 	// 	$scope.appointment['type'] = "VACCINE_APPOINTMENT";
+								// 	// 	$scope.appointment['patient'] = $scope.visit.patient;
+								// 	// 	$http.put("/iTrust2/api/v1/vaccineappointmentrequests/" + requests[i].id, $scope.appointment).then( 
+								// 	// 	function(response) {
+								// 	// 			$scope.message = "";
+								// 	// 			$scope.message += "Follow up appointment existed for patient, updated to new time and date.\n";
+                            	// 	// 			$scope.message += "Office visit created successfully.";
+								// 	// 			$scope.recentlyModifiedRequest = response.data['id'];
+								// 	// 			$scope.appointment = {};
+								// 	// 			$scope.appointment.vaccine = $scope.selectedVaccine;
+								// 	// 			$scope.inputDateTime = undefined;
+								// 	// 			$scope.errorMsg = "";
+								// 	// 			$scope.visit = {};
+								// 	// 			$scope.visit.type = "VACCINE_APPOINTMENT";
+								// 	// 			$scope.visitInputDateTime = new Date();
+								// 	// 			$scope.selectedVaccineAppointment = {};
+								// 	// 			$scope.doseNumber = undefined;
+								// 	// 			$scope.selectedVaccine = {};
+								// 	// 			$scope.preferredVaccine = "";
+								// 	// 		}, function(rejection) {
+								// 	// 			$scope.message = "";
+                            	// 	// 			$scope.message += "Office visit created successfully.";
+								// 	// 			$scope.errorMsg += "Could not complete appointment request"
+								// 	// 		});
+								// 	// 	alreadyExisted = true;
+								// 	// }
+
+								// }
+								
+								var alreadyExisted = false;
+								// if no other appointment existed, add new appointment
+								if (!alreadyExisted) {
+									$scope.appointment["status"] = "APPROVED";
+									$scope.appointment['date'] = $scope.inputDateTime.toISOString(); 
+									$scope.appointment['type'] = "VACCINE_APPOINTMENT";
+									$scope.appointment['patient'] = $scope.visit.patient;
+									$http.post("/iTrust2/api/v1/vaccineappointmentrequestsHCP", $scope.appointment).then( 
+									function(response) {
+										$scope.message = "";
+										$scope.message += "Follow up appointment request has been requested successfully.\n"
+										$scope.message += "Office visit created successfully.\n";
+										$scope.recentlyModifiedRequest = response.data['id'];
+										$scope.appointment = {};
+										$scope.appointment.vaccine = $scope.selectedVaccine;
+										$scope.inputDateTime = undefined;
+										$scope.errorMsg = "";
+										$scope.visit = {};
+										$scope.visit.type = "VACCINE_APPOINTMENT";
+										$scope.visitInputDateTime = new Date();
+										$scope.selectedVaccineAppointment = {};
+										$scope.doseNumber = undefined;
+										$scope.selectedVaccine = {};
+										$scope.preferredVaccine = "";
+									}, function(rejection) {
+										$scope.message = "";
+										$scope.message += "Office visit created successfully.";
+										$scope.errorMsg += "Could not complete appointment request"
+									});
+								}
+							});
+						}
+					}
 
                     $scope.noteEntry = "";
                     $scope.codeEntry = "";
@@ -911,6 +1162,23 @@
                         }
                     }
 
+					$scope.prescheduled = function() {
+						return $scope.visit.prescheduled;
+					}
+
+					$scope.noErrors = function() {
+						return ($scope.doseNumError == "" || $scope.doseNumError == undefined) && ($scope.followUpDateError == "" || $scope.followUpDateError == undefined);
+					}
+
+					$scope.clearRequestErrors = function() {
+
+						if ($scope.selectedVaccine != undefined && $scope.doseNumber != undefined) {
+							if ($scope.doseNumber >= $scope.selectedVaccine.numDoses)
+								$scope.followUpDateError = "";
+						}
+						
+					}
+
                     /*Adding a procedure to Office visit*/
                     $scope.addProcedure = function () {
                         var procCopy = {};
@@ -945,23 +1213,11 @@
                     }
 
 					function deleteRequest(id) {
-						$http.delete('iTrust2/api/v1/vaccineappointmentrequests/' + id).then(function (response) {
+						$http.delete('iTrust2/api/v1/appointmentrequests/' + id).then(function (response) {
                             				$scope.errorMsg += "Error creating office visit, vaccine appointment request not saved.";
                             			}, function(rejection) {
 											$scope.errorMsg += "Error creating office visit, vaccine appointment was still saved."
 										});
-					}
-
-					function putRequest() {
-
-					}
-
-					function postRequest() {
-
-					}
-
-					function postVisit() {
-
 					}
 
                     //call initally
@@ -983,13 +1239,13 @@
 									<div class="form-group col-md-2 text-left">
 										<label for="time">Date and Time of Office Visit:</label> <input id="timevisit" type="datetime-local"
 											name="timevisit" class="form-control" ng-model="visitInputDateTime"
-											required="true" step="60" style="width:225px"/>
+											required="true" step="60" style="width:225px" ng-change="loadVaccineAppointmentRequests()"/>
 									</div>
 
 									<div class="form-group col-md-2 text-right">
 										<div class="checkbox">
 											<label> <input type="checkbox" name="preScheduled"
-												class="checkbox" ng-model="visit.prescheduled">Prescheduled?
+												class="checkbox" ng-model="visit.prescheduled" ng-change="loadVaccineAppointmentRequests()">Prescheduled?
 											</label>
 										</div>
 									</div>
@@ -1007,7 +1263,7 @@
 															<label> <input type="radio"
 																ng-model="$parent.visit.patient" name="name"
 																value="{{patient.username}}" required="true"
-																ng-change='patientSelect(patient); loadVaccineAppointmentRequests()'
+																ng-change='patientSelect(patient); loadVaccineAppointmentRequests(); checkDoseNumber()'
 																id="{{patient.username}}" />&nbsp;{{patient.username}}
 														</label>
 														</li>
@@ -1182,22 +1438,27 @@
 												<div class="form-group row">
 													<div class="col-md-12" style="padding-bottom:8px;">
 														<label>Vaccine Appointment: </label>
-														<select required ng-options="request.title for request in vaccineRequests" ng-change="updatePreferred()" ng-model="selectedVaccineAppointment" class="form-control"></select>
+														<select required="true" ng-disabled="!prescheduled()" ng-options="request.title for request in vaccineRequests" ng-change="updatePreferred()" ng-model="selectedVaccineAppointment" class="form-control"></select>
 													</div>
 													<div class="col-md-3">
 														<label>Dose Number: </label>
-														<input type=text ng-model="doseNumber" class="form-control" ng-change="updateFollowupDate(); checkDoseNumber()"/>
+														<input type=text ng-model="doseNumber" class="form-control" ng-change="updateFollowupDate(); checkDoseNumber(); clearRequestErrors()"/>
 														
 													</div>
 													<div class="form-group row">
 														<div class="col-xs-6">
 															<label>Vaccine Type: </label>
-															<select ng-options="vaccine.name for vaccine in vaccines" ng-model="selectedVaccine" class="form-control" ng-change="updateFollowupVaccine(); updateFollowupDate(); checkDoseNumber()">
+															<select style="width:350px;" ng-options="vaccine.name for vaccine in vaccines" ng-model="selectedVaccine" class="form-control" ng-change="updateFollowupVaccine(); updateFollowupDate(); checkDoseNumber()">
 																<option value="" disabled selected>{{preferredVaccine}}</option>
 															</select>
 														</div>
 													</div>
+													<label class="text" style="white-space: pre-line;">{{mixAndMatchWarning}}</label>
+													<div ng-show="isMixAndMatch()" ng-hide="!isMixAndMatch()">
+														<label class="text" style="display: inline-block;">Is the patient fully vaccinated after this dose?: </label><input type=checkbox ng-model="mixAndMatchFullyDosed" ng-change="mixAndMatchFullChange()" style="display: inline-block; margin-left:10px;" class="checkbox"/>
+													</div>
 													<label class="text-danger">{{doseNumError}}</label>
+													<input class="btn-danger" type=button ng-show="showDoseWarningBtn" ng-hide="!showDoseWarningBtn" ng-click="confirmDosageWarning()" value="Confirm"/>
 												</div>
 												
 												
@@ -1599,14 +1860,12 @@
 									<div class="form-group col-md-6">
 										<label>Notes:</label>
 										<textarea name="notes" ng-model="visit.notes"
-											class="form-control" rows="3"></textarea>
+											class="form-control" rows="3" ng-focus="noteFocus()" ng-blur="noteBlur()"></textarea>
 									</div>
 									<div class="col-md-12 text-right">
 										<div style="white-space: pre-line;">
 											<div name="success" class="text-success">{{message}}</div>
 											<div name="errorMsg" class="text-danger">{{errorMsg}}</div>
-											<div name="errorMsg" class="text-danger">{{reqErrorMsg}}</div>
-											<div name="success" class="text-success">{{reqMessage}}</div>
 										</div>
 									</div>
 								</div>
@@ -1614,18 +1873,17 @@
 
 							<script type="text/ng-template" id="officevisitonly">
 								<button class="btn btn-primary btn-lg" ng-click="submit()"
-									name="submit">Submit Office Visit</button>
+									name="submit" ng-disabled="!noErrors()">Submit Office Visit</button>
 							</script>
 
 							<script type="text/ng-template" id="officevisitandvaccinerequest">
 								<button class="btn btn-primary btn-lg" ng-click="submitWithFollowup()"
-									name="submit">Submit Office Visit and Vaccine Appointment Request</button>
+									name="submit" ng-disabled="!noErrors()">Submit Office Visit and Vaccine Appointment Request</button>
 							</script>
 
 							<!-- was form -->
 							<div class="panel-footer text-right" ng-include="getButtonTemplate()">
 								<!-- button may have to be inside form tag, or just a submit function for the form? -->
-								
 							</div>
 						</div>
 					</div>

@@ -149,7 +149,7 @@
 							var aptDate = new Date();
 
 							if (intervalType == 'DAYS') {
-								aptDate.setDate(aptGate.getDate() + intervalAmount);
+								aptDate.setDate(aptDate.getDate() + intervalAmount);
 							} else if (intervalType == 'WEEKS') {
 								aptDate.setDate(aptDate.getDate() + (intervalAmount * 7));
 							} else if (intervalType == "MONTHS") {
@@ -271,6 +271,10 @@
 						return returnString;
 					}
 
+					$scope.isMixAndMatch = function() {
+						return $scope.mixAndMatchWarning != "" && $scope.mixAndMatchWarning != undefined;
+					}
+
 					function validFollowupDate(date) {
 						// make sure the date is within 24 hours of the interval date
 						if ($scope.selectedVaccine != undefined && $scope.doseNumber != undefined) {
@@ -280,7 +284,7 @@
 							var aptDate = new Date();
 
 							if (intervalType == 'DAYS') {
-								aptDate.setDate(aptGate.getDate() + intervalAmount);
+								aptDate.setDate(aptDate.getDate() + intervalAmount);
 							} else if (intervalType == 'WEEKS') {
 								aptDate.setDate(aptDate.getDate() + (intervalAmount * 7));
 							} else if (intervalType == "MONTHS") {
@@ -305,6 +309,47 @@
 							} else {
 								return false;
 							}
+						}
+					}
+
+					$scope.noteFocus = function() {
+						console.log("notefocus");
+						if ($scope.mixAndMatchFullyDosed) {
+							if ($scope.visit.notes == undefined)
+								$scope.visit.notes = "";
+
+							var replaceStr = " This vaccine dose now certifies " + $scope.visit.patient + " as fully vaccinated as per the CDC and FDA's guidelines on interchangeably dosing with Covid19 vaccines.";
+
+							console.log(replaceStr);
+							console.log($scope.visit.notes);
+							$scope.visit.notes = $scope.visit.notes.replace(replaceStr, '');
+						}
+						
+					}
+
+					$scope.mixAndMatchFullChange = function() {
+						if ($scope.mixAndMatchFullyDosed) {
+							if ($scope.visit.notes == undefined)
+								$scope.visit.notes = "";
+							
+							$scope.visit.notes += " This vaccine dose now certifies " + $scope.visit.patient + " as fully vaccinated as per the CDC and FDA's guidelines on interchangeably dosing with Covid19 vaccines.";
+					
+						} else {
+
+							var replaceStr = " This vaccine dose now certifies " + $scope.visit.patient + " as fully vaccinated as per the CDC and FDA's guidelines on interchangeably dosing with Covid19 vaccines.";
+
+							console.log(replaceStr);
+							console.log($scope.visit.notes);
+							$scope.visit.notes = $scope.visit.notes.replace(replaceStr, '');
+						}
+					}
+
+					$scope.noteBlur = function() {
+						if ($scope.mixAndMatchFullyDosed) {
+							if ($scope.visit.notes == undefined)
+								$scope.visit.notes = "";
+
+							$scope.visit.notes += " This vaccine dose now certifies " + $scope.visit.patient + " as fully vaccinated as per the CDC and FDA's guidelines on interchangeably dosing with Covid19 vaccines.";
 						}
 					}
 
@@ -1395,6 +1440,9 @@
 														</div>
 													</div>
 													<label class="text" style="white-space: pre-line;">{{mixAndMatchWarning}}</label>
+													<div ng-show="isMixAndMatch()" ng-hide="!isMixAndMatch()">
+														<label class="text" style="display: inline-block;">Is the patient fully vaccinated after this does?: </label><input type=checkbox ng-model="mixAndMatchFullyDosed" ng-change="mixAndMatchFullChange()" style="display: inline-block; margin-left:10px;" class="checkbox"/>
+													</div>
 													<label class="text-danger">{{doseNumError}}</label>
 													<input class="btn-danger" type=button ng-show="showDoseWarningBtn" ng-hide="!showDoseWarningBtn" ng-click="confirmDosageWarning()" value="Confirm"/>
 												</div>
@@ -1798,7 +1846,7 @@
 									<div class="form-group col-md-6">
 										<label>Notes:</label>
 										<textarea name="notes" ng-model="visit.notes"
-											class="form-control" rows="3"></textarea>
+											class="form-control" rows="3" ng-focus="noteFocus()" ng-blur="noteBlur()"></textarea>
 									</div>
 									<div class="col-md-12 text-right">
 										<div style="white-space: pre-line;">

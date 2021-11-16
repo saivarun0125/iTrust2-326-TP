@@ -78,10 +78,13 @@
     			} else {
     				err.push("Please enter a number of doses");
     			}
-    			
-    			
-        		// check for the interval type and interval amount if the dose number required is more than 1
-    			if ("doseInterval" in drug) {
+
+				// if the dose number required is 1, dont add any error checking for interval type
+				if (drug.numDoses == 1) {
+					$scope.drug.doseInterval = undefined;
+				} else {
+					// check for the interval type and interval amount if the dose number required is more than 1
+					if ("doseInterval" in drug) {
     				if ("intervalAmount" in drug.doseInterval) {
     					// check to make sure that the interval amount is a number
                 		if (isNaN(drug.doseInterval['intervalAmount'])) {
@@ -96,11 +99,13 @@
             		if (drug && drug.doseInterval['intervalType'] == null) {
             			err.push("An interval type needs to be selected");
             		}
-    			} else if (drug.numDoses == 1) {
-					// do nothing
-				} else {
-    				err.push("Please select an interval type and enter an interval amount");
-    			}
+    				} else {
+    					err.push("Please select an interval type and enter an interval amount");
+    				}
+				}
+    			
+    			
+        		
     			
         		
         		

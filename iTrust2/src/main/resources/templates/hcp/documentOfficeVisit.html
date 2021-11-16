@@ -350,9 +350,88 @@
 						}
 					}
 
+					$scope.checkVaccinationStatus = function() {
+						console.log("check status");
+						console.log($scope.visit.patient);
+						console.log($scope.visit.type);
+						// abort if a vaccine hasn't been selected yet
+						if ($scope.visit.patient == undefined || $scope.visit.type != "VACCINE_APPOINTMENT")
+							return undefined;
+
+						console.log("past abort");
+
+						$http.get("/iTrust2/api/v1/vaccineofficevisits").then(
+						function (response) {
+							var vaccineDoses = {};
+							for (var i = 0; i < response.data.length; i++) {
+								if (response.data[i].patient.username == $scope.visit.patient) {
+									if (!(response.data[i].vaccine.code in vaccineDoses)) {
+										vaccineDoses[response.data[i].vaccine.code] = 1;
+									} else {
+										vaccineDoses[response.data[i].vaccine.code] = vaccineDoses[response.data[i].vaccine.code] + 1;
+									}	
+								}
+							}
+							
+							console.log(vaccineDoses);
+
+							var firstName;
+							var lastName;
+							var patientDOB;
+
+							// get current patient
+							for (var i = 0; i < $scope.patients.length; i++ ) {
+								if ($scope.patients[i].username == $scope.visit.patient) {
+									firstName = $scope.patients[i].firstName;
+									lastName = $scope.patients[i].lastName;
+									patientDOB = $scope.patients[i].dateOfBirth;
+								}
+							}
+
+							// check if they are already vaccinated with a coivd vaccine
+							var dosedWith = [];
+							var alreadyDosed = false;
+							$scope.mixAndMatchWarning = "";
+							var keepLooping = true;
+							var fullyVaccinatedMessage = "";
+							for (var i = 0; i < $scope.vaccines.length && keepLooping; i++) {
+								if ($scope.vaccines[i].code in vaccineDoses) {
+									if ($scope.vaccines[i].numDoses == vaccineDoses[$scope.vaccines[i].code])
+										fullyVaccinatedMessage += firstName + " " + lastName + " is already fully vaccinated with the " + $scope.vaccines[i].name + " vaccine.\n";
+								}
+							}
+
+							console.log(fullyVaccinatedMessage);
+
+							// check if user is fully vaccinated with mix and match
+							for (var i = 0; i < response.data.length; i++) {
+								// if the office visit is the user's
+								console.log(response.data[i].patient.username);
+								console.log($scope.visit.patient);
+								if (response.data[i].patient.username == $scope.visit.patient) {
+									// if the mix and match string is in the comments, they are fully vaccinated
+									console.log(response.data[i].notes);
+									if (response.data[i].notes != undefined && response.data[i].notes.includes(" This vaccine dose now certifies " + $scope.visit.patient + " as fully vaccinated as per the CDC and FDA's guidelines on interchangeably dosing with Covid19 vaccines.")) {
+										fullyVaccinatedMessage += firstName + " " + lastName + " is already fully vaccinated with FDA and CDC approved interchangeably dosed vaccines.\n";
+									}
+								}
+							}
+
+							console.log(fullyVaccinatedMessage);
+
+							// if the dose number isn't 1 + the patient's current dosage, return error 
+							if (fullyVaccinatedMessage != "") {
+								$scope.doseNumError = fullyVaccinatedMessage;
+								$scope.mixAndMatchWarning = "";
+								$scope.errorMsg = $scope.errorMsg.replace("Patient already fully vaccinated against Covid19\n", '');
+								$scope.errorMsg += "Patient already fully vaccinated against Covid19\n";
+							}
+						});
+					}
+
 					$scope.checkDoseNumber = function() {
 						// abort if a vaccine hasn't been selected yet
-						if ($scope.selectedVaccine == undefined || $scope.doseNumber == undefined)
+						if ($scope.selectedVaccine == undefined || $scope.doseNumber == undefined || $scope.visit.patient == undefined)
 							return undefined;
 
 						// if the dose isn't a number, abort
@@ -425,6 +504,19 @@
 									dosedWith.push($scope.vaccines[i].name);
 								}
 							}
+
+							// check if user is fully vaccinated with mix and match
+							for (var i = 0; i < response.data; i++) {
+								// if the office visit is the user's
+								if (resposne.data[i].patient == $scope.visit.patient) {
+
+									// if the mix and match string is in the comments, they are fully vaccinated
+									if (response.data[i].notes.includes(" This vaccine dose now certifies " + $scope.visit.patient + " as fully vaccinated as per the CDC and FDA's guidelines on interchangeably dosing with Covid19 vaccines.")) {
+										fullyVaccinatedMessage += firstName + " " + lastName + " is already fully vaccinated with the " + $scope.vaccines[i].name + " vaccine.\n";
+									}
+								}
+							}
+
 
 							if (alreadyDosed) {
 								$scope.mixAndMatchWarning += "Please review current FDA and CDC guidelines for interchangeably dosing between the";
@@ -844,7 +936,7 @@
 					$scope.visit = {};
 
 					$scope.getButtonTemplate = function() {
-						if ($scope.visit.type == "VACCINE_APPOINTMENT" && "doseNumber" in $scope && "selectedVaccine" in $scope && $scope.doseNumber < $scope.selectedVaccine.numDoses) {
+						if ($scope.visit.type == "VACCINE_APPOINTMENT" && "doseNumber" in $scope && "selectedVaccine" in $scope && $scope.selectedVaccine != undefined && $scope.doseNumber != undefined && $scope.doseNumber < $scope.selectedVaccine.numDoses) {
 							return "officevisitandvaccinerequest";
 						} else {
 							return "officevisitonly";
@@ -970,9 +1062,12 @@
 										$scope.visit = {};
 										$scope.visit.type = "VACCINE_APPOINTMENT";
 										$scope.visitInputDateTime = undefined;
-										$scope.selectedVaccineAppointment = {};
+										$scope.selectedVaccineAppointment = undefined;
 										$scope.doseNumber = undefined;
-										$scope.selectedVaccine = {};
+										$scope.visitInputDateTime = new Date();
+										$scope.selectedVaccine = undefined;
+										$scope.mixAndMatchWarning = "";
+										$scope.doseNumError = "";
 										$scope.preferredVaccine = "";
                             			$scope.message = "Office visit created successfully";
 									}
@@ -1067,9 +1162,11 @@
 										$scope.visit = {};
 										$scope.visit.type = "VACCINE_APPOINTMENT";
 										$scope.visitInputDateTime = new Date();
-										$scope.selectedVaccineAppointment = {};
+										$scope.selectedVaccineAppointment = undefined;
 										$scope.doseNumber = undefined;
-										$scope.selectedVaccine = {};
+										$scope.selectedVaccine = undefined;
+										$scope.mixAndMatchWarning = "";
+										$scope.doseNumError = "";
 										$scope.preferredVaccine = "";
 									}, function(rejection) {
 										$scope.message = "";
@@ -1263,7 +1360,7 @@
 															<label> <input type="radio"
 																ng-model="$parent.visit.patient" name="name"
 																value="{{patient.username}}" required="true"
-																ng-change='patientSelect(patient); loadVaccineAppointmentRequests(); checkDoseNumber()'
+																ng-change='patientSelect(patient); loadVaccineAppointmentRequests(); checkDoseNumber(); checkVaccinationStatus()'
 																id="{{patient.username}}" />&nbsp;{{patient.username}}
 														</label>
 														</li>
@@ -1281,7 +1378,7 @@
 													<ul
 														style="max-height: 15%; overflow: auto; list-style: none;">
 														<li ng-repeat="type in types"><label> <input
-																type="radio" ng-model="$parent.visit.type" ng-change="loadVaccineAppointmentRequests()"
+																type="radio" ng-model="$parent.visit.type" ng-change="loadVaccineAppointmentRequests(); checkVaccinationStatus()"
 																name="{{type}}" value="{{type}}" required="true" /> {{type
 																| humanize}}
 														</label></li>
@@ -1466,7 +1563,7 @@
 										</div>
 									</div>
 
-									<div class="col-md-4" ng-show="doseNumber < selectedVaccine.numDoses">
+									<div class="col-md-4" ng-show="doseNumber < selectedVaccine.numDoses && !mixAndMatchFullyDosed">
 										<div class="panel panel-info">
 											<div class="panel-heading">
 												<h4>Schedule Followup Vaccination Appointment</h4>

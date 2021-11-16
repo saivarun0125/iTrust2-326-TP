@@ -102,11 +102,11 @@ public class APIVaccineStatusTest {
         hospitalService.save( hosp );
 
         final CovidVaccine pfizer = new CovidVaccine( "1111-1111-11", "desc", "pfizer", (short) 2,
-                new DoseInterval( ChronoUnit.WEEKS, 4 ), 12, 80 );
+                new DoseInterval( ChronoUnit.WEEKS, 4 ), 12, 80, true );
         final CovidVaccine moderna = new CovidVaccine( "2222-2222-22", "desc", "moderna", (short) 2,
-                new DoseInterval( ChronoUnit.WEEKS, 4 ), 15, 70 );
+                new DoseInterval( ChronoUnit.WEEKS, 4 ), 15, 70, true );
         final CovidVaccine jAndJ = new CovidVaccine( "3333-3333-33", "poison", "johnson & johnson", (short) 1, null, 12,
-                80 );
+                80, true );
         covidVaccineService.saveAll( List.of( pfizer, moderna, jAndJ ) );
 
         final VaccineOfficeVisitForm form1 = new VaccineOfficeVisitForm();

@@ -212,7 +212,12 @@
 					// get a list of the vaccines
 					$http.get("/iTrust2/api/v1/CovidVaccines").then(
 						function (response) {
-							$scope.vaccines = response.data;
+							var vaccines = [];
+							for (var i = 0; i < response.data.length; i++) {
+								if (response.data[i]['available'])
+									vaccines.push(response.data[i]);
+							}
+							$scope.vaccines = vaccines;
 						}
 					);
 
@@ -362,6 +367,8 @@
 							$scope.doseNumError = "Dose number must be a number."
 							return undefined;
 						}
+
+						// check age range
 
 						$http.get("/iTrust2/api/v1/vaccineofficevisits").then(
 						function (response) {
@@ -569,7 +576,13 @@
 					}
 
 					$scope.updatePreferred = function(){
-						$scope.preferredVaccine = $scope.selectedVaccineAppointment.vaccine.name + " is preferred."
+						console.log($scope.selectedVaccineAppointment.vaccine);
+						if ($scope.selectedVaccineAppointment.vaccine['available']) {
+							$scope.preferredVaccine = $scope.selectedVaccineAppointment.vaccine.name + " is preferred."
+						} else {
+							$scope.preferredVaccine = $scope.selectedVaccineAppointment.vaccine.name + " is preferred, but not available."
+						}
+							
 					}
 
 					$scope.checkFollowupDate = function() {
@@ -1433,7 +1446,7 @@
 													<div class="form-group row">
 														<div class="col-xs-6">
 															<label>Vaccine Type: </label>
-															<select ng-options="vaccine.name for vaccine in vaccines" ng-model="selectedVaccine" class="form-control" ng-change="updateFollowupVaccine(); updateFollowupDate(); checkDoseNumber()">
+															<select style="width:350px;" ng-options="vaccine.name for vaccine in vaccines" ng-model="selectedVaccine" class="form-control" ng-change="updateFollowupVaccine(); updateFollowupDate(); checkDoseNumber()">
 																<option value="" disabled selected>{{preferredVaccine}}</option>
 															</select>
 														</div>

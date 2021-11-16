@@ -147,7 +147,6 @@
 							var intervalType = $scope.selectedVaccine.doseInterval.intervalType;
 
 							var aptDate = new Date($scope.visitInputDateTime);
-							console.log(aptDate);
 
 							if (intervalType == 'DAYS') {
 								aptDate.setDate(aptDate.getDate() + intervalAmount);
@@ -162,7 +161,6 @@
 							aptDate.setMilliseconds(0);
 							aptDate.setSeconds(0);
 
-							console.log(aptDate);
 							$scope.inputDateTime = aptDate;
 						}
 					}
@@ -317,15 +315,12 @@
 					}
 
 					$scope.noteFocus = function() {
-						console.log("notefocus");
 						if ($scope.mixAndMatchFullyDosed) {
 							if ($scope.visit.notes == undefined)
 								$scope.visit.notes = "";
 
 							var replaceStr = " This vaccine dose now certifies " + $scope.visit.patient + " as fully vaccinated as per the CDC and FDA's guidelines on interchangeably dosing with Covid19 vaccines.";
 
-							console.log(replaceStr);
-							console.log($scope.visit.notes);
 							$scope.visit.notes = $scope.visit.notes.replace(replaceStr, '');
 						}
 						
@@ -342,8 +337,6 @@
 
 							var replaceStr = " This vaccine dose now certifies " + $scope.visit.patient + " as fully vaccinated as per the CDC and FDA's guidelines on interchangeably dosing with Covid19 vaccines.";
 
-							console.log(replaceStr);
-							console.log($scope.visit.notes);
 							$scope.visit.notes = $scope.visit.notes.replace(replaceStr, '');
 						}
 					}
@@ -368,8 +361,6 @@
 							return undefined;
 						}
 
-						// check age range
-
 						$http.get("/iTrust2/api/v1/vaccineofficevisits").then(
 						function (response) {
 							vaccineDoses = {};
@@ -387,14 +378,25 @@
 
 							var firstName;
 							var lastName;
+							var patientDOB;
+							
 
 							// get current patient
 							for (var i = 0; i < $scope.patients.length; i++ ) {
 								if ($scope.patients[i].username == $scope.visit.patient) {
 									firstName = $scope.patients[i].firstName;
 									lastName = $scope.patients[i].lastName;
+									patientDOB = $scope.patients[i].dateOfBirth;
 								}
 							}
+
+							// check age range
+							var lowerAgeLimit = $scope.selectedVaccine.ageRange[0];
+							var upperAgeLimit = $scope.selectedVaccine.ageRange[1];
+							var curDate = new Date();
+							patientDOB = new Date(patientDOB);
+							var patientAge = (parseInt(curDate.getFullYear())) - parseInt(patientDOB.getFullYear());
+							var validAge = lowerAgeLimit <= patientAge && patientAge <= upperAgeLimit;
 
 							var currentDosage;
 							if (vaccineDoses[$scope.selectedVaccine.code] == undefined) {
@@ -482,9 +484,9 @@
 								$scope.errorMsg += "Confirm the dosage number with the patient before submitting\n";
 								$scope.showDoseWarningBtn = true;
 							}
+							if (!validAge)
+								$scope.doseNumError = "Patient isn't withing the age range for the " + $scope.selectedVaccine.name + " vaccine.";
 						});
-
-						$scope.doseNumError;
 					}
 
 					var doseWarningConfirmSubmit = false;
@@ -576,7 +578,6 @@
 					}
 
 					$scope.updatePreferred = function(){
-						console.log($scope.selectedVaccineAppointment.vaccine);
 						if ($scope.selectedVaccineAppointment.vaccine['available']) {
 							$scope.preferredVaccine = $scope.selectedVaccineAppointment.vaccine.name + " is preferred."
 						} else {
@@ -1017,7 +1018,6 @@
 										$scope.appointment['date'] = $scope.inputDateTime.toISOString(); 
 										$scope.appointment['type'] = "VACCINE_APPOINTMENT";
 										$scope.appointment['patient'] = $scope.visit.patient;
-										console.log($scope.appointment);
 										$http.put("/iTrust2/api/v1/vaccineappointmentrequests/" + requests[i].id, $scope.appointment).then( 
 										function(response) {
 												$scope.message = "";
@@ -1051,7 +1051,6 @@
 									$scope.appointment['date'] = $scope.inputDateTime.toISOString(); 
 									$scope.appointment['type'] = "VACCINE_APPOINTMENT";
 									$scope.appointment['patient'] = $scope.visit.patient;
-									console.log($scope.appointment);
 									$http.post("/iTrust2/api/v1/vaccineappointmentrequestsHCP", $scope.appointment).then( 
 									function(response) {
 										$scope.message = "";
@@ -1261,7 +1260,7 @@
 															<label> <input type="radio"
 																ng-model="$parent.visit.patient" name="name"
 																value="{{patient.username}}" required="true"
-																ng-change='patientSelect(patient); loadVaccineAppointmentRequests()'
+																ng-change='patientSelect(patient); loadVaccineAppointmentRequests(); checkDoseNumber()'
 																id="{{patient.username}}" />&nbsp;{{patient.username}}
 														</label>
 														</li>

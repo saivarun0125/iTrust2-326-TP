@@ -150,8 +150,53 @@ public class APIVaccineAppointmentRequestController extends APIController {
      *         provided
      */
     @PostMapping ( BASE_PATH + "/vaccineappointmentrequests" )
-    @PreAuthorize ( "hasAnyRole('ROLE_PATIENT', 'ROLE_HCP', 'ROLE_VACCINATOR')" )
+    @PreAuthorize ( "hasAnyRole('ROLE_PATIENT')" )
     public ResponseEntity createVaccineAppointmentRequest (
+            @RequestBody final VaccineAppointmentRequestForm vaccineRequestForm ) {
+
+        try {
+            final VaccineAppointmentRequest request = service.build( vaccineRequestForm );
+            if ( null != service.findById( request.getId() ) ) {
+                return new ResponseEntity(
+                        errorResponse( "AppointmentRequest with the id " + request.getId() + " already exists" ),
+                        HttpStatus.CONFLICT );
+            }
+            if ( !this.isVaccinated( (Patient) request.getPatient(), request.getVaccine() ) ) {
+                if ( service.findByPatient( request.getPatient() ).size() >= 2 ) {
+                    return new ResponseEntity( errorResponse( "Patient already has two vaccine appointments" ),
+                            HttpStatus.CONFLICT );
+                }
+                service.save( request );
+                loggerUtil.log( TransactionType.APPOINTMENT_REQUEST_SUBMITTED, request.getPatient(), request.getHcp() );
+                return new ResponseEntity( request, HttpStatus.OK );
+            }
+            else {
+                return new ResponseEntity( errorResponse( "Patient is already fully vaccinated" ),
+                        HttpStatus.CONFLICT );
+            }
+
+        }
+        catch ( final Exception e ) {
+            return new ResponseEntity( errorResponse( e.getMessage() ), HttpStatus.BAD_REQUEST );
+        }
+    }
+
+    /**
+     * Creates an VaccineAppointmentRequest from the RequestBody provided.
+     * Record is automatically saved in the database.
+     *
+     * @param vaccineRequestForm
+     *            The VaccineAppointmentRequestForm to be parsed into an
+     *            VaccineAppointmentRequest and stored
+     * @return The parsed and validated AppointmentRequest created from the Form
+     *         provided, HttpStatus.CONFLICT if a Request already exists with
+     *         the ID of the provided request, or HttpStatus.BAD_REQUEST if
+     *         another error occurred while parsing or saving the Request
+     *         provided
+     */
+    @PostMapping ( BASE_PATH + "/vaccineappointmentrequestsHCP" )
+    @PreAuthorize ( "hasAnyRole('ROLE_HCP', 'ROLE_VACCINATOR')" )
+    public ResponseEntity createVaccineAppointmentRequestHCP (
             @RequestBody final VaccineAppointmentRequestForm vaccineRequestForm ) {
 
         try {
@@ -173,8 +218,7 @@ public class APIVaccineAppointmentRequestController extends APIController {
 
         }
         catch ( final Exception e ) {
-            return new ResponseEntity( errorResponse( "Error occurred while validating or saving "
-                    + vaccineRequestForm.toString() + " because of " + e.getMessage() ), HttpStatus.BAD_REQUEST );
+            return new ResponseEntity( errorResponse( e.getMessage() ), HttpStatus.BAD_REQUEST );
         }
     }
 

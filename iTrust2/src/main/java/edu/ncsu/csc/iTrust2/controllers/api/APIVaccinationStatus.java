@@ -2,8 +2,11 @@ package edu.ncsu.csc.iTrust2.controllers.api;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -85,6 +88,10 @@ public class APIVaccinationStatus extends APIController {
 
     }
 
+    // testing todo:
+    // invalid tests
+    // mix and match tests
+
     /**
      * return status
      *
@@ -94,13 +101,47 @@ public class APIVaccinationStatus extends APIController {
     @PreAuthorize ( "hasRole('ROLE_PATIENT')" )
     public ResponseEntity generateCertificate () {
         final User self = userService.findByName( LoggerUtil.currentUser() );
-        boolean fullyVaccinated = false;
+        final boolean fullyVaccinated = false;
         if ( self == null ) {
             return new ResponseEntity( errorResponse( "Patient not found" ), HttpStatus.NOT_FOUND );
         }
 
         final Patient p = (Patient) self;
         final List<VaccineOfficeVisit> listOfficeVisits = vaccineOfficeVisitService.findByPatient( self );
+
+        final Map<String, Integer> doseAmounts = new HashMap<String, Integer>();
+
+        for ( final VaccineOfficeVisit visit : listOfficeVisits ) {
+            // if the current visit's vaccine isn't in the map, add it and set
+            // it's initial dose to 1
+            if ( !doseAmounts.containsKey( visit.getVaccine().getCode() ) ) {
+                doseAmounts.put( visit.getVaccine().getCode(), 1 );
+            }
+            else {
+                // if the current' visit's vaccine is in the map, increment the
+                // dose count
+                doseAmounts.put( visit.getVaccine().getCode(), doseAmounts.get( visit.getVaccine().getCode() ) + 1 );
+            }
+        }
+
+        boolean isFullyVaccinated = false;
+
+        // check for the mix and match string in any of the office visits
+        final String mixAndMatchString = " This vaccine dose now certifies " + self
+                + " as fully vaccinated as per the CDC and FDA's guidelines on interchangeably dosing with Covid19 vaccines.";
+        for ( final VaccineOfficeVisit visit : listOfficeVisits ) {
+            if ( visit.getNotes() != null && visit.getNotes().contains( mixAndMatchString ) ) {
+                isFullyVaccinated = true;
+            }
+        }
+
+        // check for current dosage == vaccine dose number
+        for ( final VaccineOfficeVisit visit : listOfficeVisits ) {
+            if ( visit.getVaccine() != null
+                    && visit.getVaccine().getNumDoses() == doseAmounts.get( visit.getVaccine().getCode() ) ) {
+                isFullyVaccinated = true;
+            }
+        }
 
         final String path = "certificates/" + self.getId() + "_vax_cert.pdf";
         final File f = new File( path );
@@ -111,25 +152,28 @@ public class APIVaccinationStatus extends APIController {
             final PdfDocument pdf = new PdfDocument( writer );
             final Document document = new Document( pdf );
             final Paragraph para = new Paragraph( "Vaccination Record\n" )
-                    .add( "Patient: " + p.getFirstName() + " " + p.getLastName() );
-            if ( ( listOfficeVisits.size() == 2 ) && ( listOfficeVisits.get( 0 ).getVaccine().getNumDoses() == 2 ) ) {
-                fullyVaccinated = true;
-            }
-            else if ( ( listOfficeVisits.size() == 1 )
-                    && ( listOfficeVisits.get( 0 ).getVaccine().getNumDoses() == 1 ) ) {
-                fullyVaccinated = true;
-            }
-            para.add( "\nFully Vaccinated: " + fullyVaccinated + "" ).add( "\n" );
+                    .add( "Patient: " + p.getFirstName() + " " + p.getLastName() + "\n" );
 
-            if ( null != listOfficeVisits.get( 0 ) ) {
-                para.add( "Vaccine Received: " + covidVaccineService.findById( p.getVaccineId() ).getName() );
-                para.add( "First Dose: " + listOfficeVisits.get( 0 ).getDate().toString() + "\n" );
-                para.add( "Administered by: " + listOfficeVisits.get( 0 ).getHcp().toString() + "\n" );
+            // lets the user know if they are fully vaccinated
+            if ( isFullyVaccinated ) {
+                para.add( p.getFirstName() + " " + p.getLastName() + " is fully vaccinated.\n\n" );
             }
-            if ( null != listOfficeVisits.get( 1 ) ) {
-                para.add( "Second Dose: " + listOfficeVisits.get( 1 ).toString() );
-                para.add( "Administered by: " + listOfficeVisits.get( 1 ).getHcp().toString() + "\n" );
+            else {
+                para.add( p.getFirstName() + " " + p.getLastName() + " is NOT fully vaccinated.\n\n" );
             }
+
+            // list out the all the doses that the patient has recieved
+            for ( final VaccineOfficeVisit visit : listOfficeVisits ) {
+                para.add( "___________________________________________________\n" );
+                para.add( visit.getVaccine().getName() + ": \n" );
+                para.add( "Dose number: " + visit.getDoseNumber() + ": \n" );
+                final DateTimeFormatter format = DateTimeFormatter.ofPattern( "MM/dd/yyyy" );
+                para.add( visit.getDate().format( format ) + ": \n" );
+                para.add( "Hospital: " + visit.getHospital() + ": \n" );
+                para.add( "Vaccinator: " + visit.getHcp() + ": \n" );
+                para.add( "___________________________________________________\n" );
+            }
+
             document.add( para );
             document.close();
         }

@@ -146,7 +146,8 @@
 							var intervalAmount = parseInt($scope.selectedVaccine.doseInterval.intervalAmount);
 							var intervalType = $scope.selectedVaccine.doseInterval.intervalType;
 
-							var aptDate = new Date();
+							var aptDate = new Date($scope.visitInputDateTime);
+							console.log(aptDate);
 
 							if (intervalType == 'DAYS') {
 								aptDate.setDate(aptDate.getDate() + intervalAmount);
@@ -158,11 +159,10 @@
 								aptDate.setFullYear(aptDate.getFullYear() + intervalAmount);
 							}
 
-							var followupDate = aptDate.getFullYear() + '-' + (aptDate.getMonth() + 1) + '-' + aptDate.getDate(); 
-
-							$scope.inputDate = aptDate;
 							aptDate.setMilliseconds(0);
 							aptDate.setSeconds(0);
+
+							console.log(aptDate);
 							$scope.inputDateTime = aptDate;
 						}
 					}
@@ -185,7 +185,6 @@
 					function selectableVaccineRequest(request){
 
 						var requestDate = new Date(request['date']);
-						var currentDate = new Date();
 						var formDateTime = new Date($scope.visitInputDateTime);
 						upperBound = new Date(formDateTime.toISOString());
 						upperBound = new Date(upperBound.setHours(upperBound.getHours() + 3));
@@ -281,7 +280,7 @@
 							var intervalAmount = parseInt($scope.selectedVaccine.doseInterval.intervalAmount);
 							var intervalType = $scope.selectedVaccine.doseInterval.intervalType;
 
-							var aptDate = new Date();
+							var aptDate = new Date($scope.visitInputDateTime);
 
 							if (intervalType == 'DAYS') {
 								aptDate.setDate(aptDate.getDate() + intervalAmount);
@@ -582,7 +581,7 @@
 							if (intervalAmount == 1)
 								intervalType = intervalType.substring(0, intervalType.length - 1);
 
-							$scope.followUpDateError = "Follow up appointment date must be within 24 hours of " + intervalAmount + " " + intervalType + " past the current date and time for the " + $scope.selectedVaccine.name + " vaccine.";
+							$scope.followUpDateError = "Follow up appointment date must be within 24 hours of " + intervalAmount + " " + intervalType + " past the office visit date and time for the " + $scope.selectedVaccine.name + " vaccine.";
 							$scope.errorMsg = $scope.errorMsg.replace("Invalid follow up date\n", "");
 							$scope.errorMsg += "Invalid follow up date\n";
 						} else {
@@ -1225,13 +1224,13 @@
 									<div class="form-group col-md-2 text-left">
 										<label for="time">Date and Time of Office Visit:</label> <input id="timevisit" type="datetime-local"
 											name="timevisit" class="form-control" ng-model="visitInputDateTime"
-											required="true" step="60" style="width:225px"/>
+											required="true" step="60" style="width:225px" ng-change="loadVaccineAppointmentRequests()"/>
 									</div>
 
 									<div class="form-group col-md-2 text-right">
 										<div class="checkbox">
 											<label> <input type="checkbox" name="preScheduled"
-												class="checkbox" ng-model="visit.prescheduled">Prescheduled?
+												class="checkbox" ng-model="visit.prescheduled" ng-change="loadVaccineAppointmentRequests()">Prescheduled?
 											</label>
 										</div>
 									</div>

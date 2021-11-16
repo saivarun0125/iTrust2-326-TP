@@ -1441,7 +1441,7 @@
 													</div>
 													<label class="text" style="white-space: pre-line;">{{mixAndMatchWarning}}</label>
 													<div ng-show="isMixAndMatch()" ng-hide="!isMixAndMatch()">
-														<label class="text" style="display: inline-block;">Is the patient fully vaccinated after this does?: </label><input type=checkbox ng-model="mixAndMatchFullyDosed" ng-change="mixAndMatchFullChange()" style="display: inline-block; margin-left:10px;" class="checkbox"/>
+														<label class="text" style="display: inline-block;">Is the patient fully vaccinated after this dose?: </label><input type=checkbox ng-model="mixAndMatchFullyDosed" ng-change="mixAndMatchFullChange()" style="display: inline-block; margin-left:10px;" class="checkbox"/>
 													</div>
 													<label class="text-danger">{{doseNumError}}</label>
 													<input class="btn-danger" type=button ng-show="showDoseWarningBtn" ng-hide="!showDoseWarningBtn" ng-click="confirmDosageWarning()" value="Confirm"/>

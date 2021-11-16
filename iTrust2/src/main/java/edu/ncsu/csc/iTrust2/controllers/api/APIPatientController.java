@@ -19,8 +19,10 @@ import edu.ncsu.csc.iTrust2.forms.PatientForm;
 import edu.ncsu.csc.iTrust2.models.Patient;
 import edu.ncsu.csc.iTrust2.models.User;
 import edu.ncsu.csc.iTrust2.models.enums.TransactionType;
+import edu.ncsu.csc.iTrust2.services.CovidVaccineService;
 import edu.ncsu.csc.iTrust2.services.PatientService;
 import edu.ncsu.csc.iTrust2.services.UserService;
+import edu.ncsu.csc.iTrust2.services.VaccineOfficeVisitService;
 import edu.ncsu.csc.iTrust2.utils.LoggerUtil;
 
 /**
@@ -38,19 +40,29 @@ public class APIPatientController extends APIController {
      * Patient service
      */
     @Autowired
-    private PatientService patientService;
+    private PatientService            patientService;
+
+    /** User service */
+    @Autowired
+    private VaccineOfficeVisitService vaccineOfficeVisitService;
 
     /**
      * User Service
      */
     @Autowired
-    private UserService    userService;
+    private UserService               userService;
+
+    /**
+     * Vaccine Service
+     */
+    @Autowired
+    private CovidVaccineService       covidVaccineService;
 
     /**
      * LoggerUtil
      */
     @Autowired
-    private LoggerUtil     loggerUtil;
+    private LoggerUtil                loggerUtil;
 
     /**
      * Retrieves and returns a list of all Patients stored in the system

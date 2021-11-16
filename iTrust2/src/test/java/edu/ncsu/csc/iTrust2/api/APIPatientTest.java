@@ -214,6 +214,8 @@ public class APIPatientTest {
         // Also test a field we haven't set yet
         Assert.assertNull( anttiRetrieved.getPreferredName() );
 
+        mvc.perform( get( "/api/v1/patient/vaccinationstatus" ) ).andExpect( status().isOk() );
+
         // but they can't edit someone else's
         patient.setUsername( "patient" );
         mvc.perform( put( "/api/v1/patients/patient" ).contentType( MediaType.APPLICATION_JSON )

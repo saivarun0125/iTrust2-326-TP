@@ -133,6 +133,49 @@ public class Patient extends User {
     private Gender    gender;
 
     /**
+     * check to see patient fully vaxxed
+     */
+    private boolean   isFullyVaccinated;
+
+    /**
+     * doese of patient
+     */
+    private int       vaccineDoses;
+
+    /**
+     * The id of vaccine
+     */
+    private long      vaccineId;
+
+    /**
+     * first dose date
+     */
+    @Basic
+    // Allows the field to show up nicely in the database
+    @Convert ( converter = LocalDateConverter.class )
+    @JsonAdapter ( LocalDateAdapter.class )
+    private LocalDate firstShot;
+
+    /**
+     * second dose date
+     */
+    @Basic
+    // Allows the field to show up nicely in the database
+    @Convert ( converter = LocalDateConverter.class )
+    @JsonAdapter ( LocalDateAdapter.class )
+    private LocalDate secondShot;
+
+    /**
+     * first vaccine giver
+     */
+    private String    firstDoseVaccinator;
+
+    /**
+     * second vaccine giver
+     */
+    private String    secondDoseVaccinator;
+
+    /**
      * For Hibernate
      */
     public Patient () {
@@ -184,6 +227,14 @@ public class Patient extends User {
         setEthnicity( Ethnicity.parse( form.getEthnicity() ) );
 
         setGender( Gender.parse( form.getGender() ) );
+
+        // setVaccineId( form.getVaccineId() );
+        // setVaccineDoses( form.getVaccineDoses() );
+        // setFullyVaccinated( form.isFullyVaccinated() );
+        // setFirstShot( LocalDate.parse( form.getFirstShot() ) );
+        // setSecondShot( LocalDate.parse( form.getSecondShot() ) );
+        // setVaccinatorFirst( form.getVaccinatorFirst() );
+        // setVaccinatorSecond( form.getVaccinatorSecond() );
 
         return this;
     }
@@ -404,6 +455,132 @@ public class Patient extends User {
      */
     public LocalDate getDateOfDeath () {
         return dateOfDeath;
+    }
+
+    /**
+     * Gets fully vaccinated
+     *
+     * @return status
+     */
+    public boolean isFullyVaccinated () {
+        return isFullyVaccinated;
+    }
+
+    /**
+     * sets the status
+     *
+     * @param isFullyVaccinated
+     */
+    public void setFullyVaccinated ( final boolean isFullyVaccinated ) {
+        this.isFullyVaccinated = isFullyVaccinated;
+    }
+
+    /**
+     * gets the doses
+     *
+     * @return doses
+     */
+    public int getVaccineDoses () {
+        return vaccineDoses;
+    }
+
+    /**
+     * sets the doses
+     *
+     * @param vaccineDoses
+     */
+    public void setVaccineDoses ( final int vaccineDoses ) {
+        this.vaccineDoses = vaccineDoses;
+    }
+
+    /**
+     * gets the id
+     *
+     * @return id
+     */
+    public long getVaccineId () {
+        return vaccineId;
+    }
+
+    /**
+     * sets the id
+     *
+     * @param vaccineId
+     */
+    public void setVaccineId ( final long vaccineId ) {
+        this.vaccineId = vaccineId;
+    }
+
+    /**
+     * gets teh first shot
+     *
+     * @return first shot
+     */
+    public LocalDate getFirstShot () {
+        return firstShot;
+    }
+
+    /**
+     * sets the first shot
+     *
+     * @param firstShot
+     */
+    public void setFirstShot ( final LocalDate firstShot ) {
+        this.firstShot = firstShot;
+    }
+
+    /**
+     * gets the second shot
+     *
+     * @return second shot
+     */
+    public LocalDate getSecondShot () {
+        return secondShot;
+    }
+
+    /**
+     * sets the second shot
+     *
+     * @param secondShot
+     */
+    public void setSecondShot ( final LocalDate secondShot ) {
+        this.secondShot = secondShot;
+    }
+
+    /**
+     * gets vaccinator
+     *
+     * @return
+     */
+    public String getFirstDoseVaccinator () {
+        return firstDoseVaccinator;
+    }
+
+    /**
+     * sets teh vaccinator
+     *
+     * @param firstDoseVaccinator
+     */
+    public void setFirstDoseVaccinator ( final String firstDoseVaccinator ) {
+        this.firstDoseVaccinator = firstDoseVaccinator;
+    }
+
+    /**
+     * gets the vaccinator
+     *
+     * @return vaccinator
+     */
+    public String getSecondDoseVaccinator () {
+        return secondDoseVaccinator;
+    }
+
+    /**
+     * second dose vaccinator
+     *
+     * @param secondDoseVaccinator
+     */
+    public void setSecondDoseVaccinator ( final String secondDoseVaccinator ) {
+        this.secondDoseVaccinator = secondDoseVaccinator;
     }
 
     /**

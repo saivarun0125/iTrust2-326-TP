@@ -183,7 +183,7 @@
 							$scope.errorMsg1 = "";
 							$scope.selectedAppointment = {};
 						}, function(rejection) {
-							$scope.errorMsg += "Could not complete appointment request"
+							$scope.errorMsg += rejection.data.message
 							$scope.message = "";
 							$scope.message1 = "";
 						});

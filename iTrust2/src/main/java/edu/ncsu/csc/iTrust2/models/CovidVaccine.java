@@ -59,8 +59,26 @@ public class CovidVaccine extends Drug {
         setAgeRange( cf.getAgeRange() );
     }
 
-    public CovidVaccine ( String code, String desc, String name, short numDoses, DoseInterval doseInterval,
-            int ageRangeBottom, int ageRangeTop ) {
+    /**
+     * Constructor that builds a covid vaccine with
+     *
+     * @param code
+     *            code to set
+     * @param desc
+     *            desc to set
+     * @param name
+     *            name to set
+     * @param numDoses
+     *            num doses to set
+     * @param doseInterval
+     *            interval to set
+     * @param ageRangeBottom
+     *            range bottom to set
+     * @param ageRangeTop
+     *            range top to set
+     */
+    public CovidVaccine ( final String code, final String desc, final String name, final short numDoses,
+            final DoseInterval doseInterval, final int ageRangeBottom, final int ageRangeTop ) {
         setCode( code );
         setDescription( desc );
         setName( name );

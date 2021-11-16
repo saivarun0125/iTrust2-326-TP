@@ -102,8 +102,10 @@ public class PatientController {
      *            data for front end
      * @return The page for the patient to download their certificate
      */
+    @GetMapping ( value = "patient/vaccinationCertificate" )
+    @PreAuthorize ( "hasRole('ROLE_PATIENT')" )
     public String getVaccinationStatus ( final Model model ) {
-        return "/patient/VaccinationCertificate";
+        return "/patient/vaccinationCertificate";
     }
 
 }

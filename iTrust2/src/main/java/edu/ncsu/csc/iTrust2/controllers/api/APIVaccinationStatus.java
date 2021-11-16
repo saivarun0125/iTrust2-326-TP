@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -214,9 +215,9 @@ public class APIVaccinationStatus extends APIController {
      *
      * @return vaccinatino status of patient
      */
-    @GetMapping ( BASE_PATH + "/vaccinationstatus" )
+    @GetMapping ( value = BASE_PATH + "/vaccinationstatus", produces = MediaType.APPLICATION_PDF_VALUE )
     @PreAuthorize ( "hasRole('ROLE_PATIENT')" )
-    public ResponseEntity<byte[]> generateCertificate () {
+    public ResponseEntity<ByteArrayResource> generateCertificate () {
         final User self = userService.findByName( LoggerUtil.currentUser() );
         final boolean fullyVaccinated = false;
         if ( self == null ) {
@@ -264,7 +265,7 @@ public class APIVaccinationStatus extends APIController {
         final File f = new File( path );
         f.getParentFile().mkdirs();
 
-        ResponseEntity<byte[]> response;
+        ResponseEntity<ByteArrayResource> response;
 
         try {
             final PdfWriter writer = new PdfWriter( path );
@@ -352,12 +353,15 @@ public class APIVaccinationStatus extends APIController {
                 return new ResponseEntity( e.getMessage(), HttpStatus.EXPECTATION_FAILED );
             }
 
+            final ByteArrayResource resource = new ByteArrayResource( pdfBytes );
+
             final HttpHeaders headers = new HttpHeaders();
             headers.setContentType( MediaType.APPLICATION_PDF );
-            headers.setContentDispositionFormData( self.getId() + "_vax_cert.pdf", self.getId() + "_vax_cert.pdf" );
-            headers.setCacheControl( "must-revalidate, post-check=0, pre-check=0" );
+            // Here you have to set the actual filename of your pdf
+            final String filename = self.getId() + "_vax_cert.pdf";
+            headers.add( HttpHeaders.CONTENT_DISPOSITION, "inline;filename=" + filename );
 
-            response = new ResponseEntity<>( pdfBytes, headers, HttpStatus.OK );
+            response = new ResponseEntity<ByteArrayResource>( resource, headers, HttpStatus.OK );
         }
         catch ( final FileNotFoundException e ) {
             return new ResponseEntity( e.getMessage(), HttpStatus.EXPECTATION_FAILED );

@@ -45,8 +45,9 @@
             var app = angular.module("vaccineCertificate", []);
             app.controller("vaccineCertificateCtrl", ($scope, $http) => {
 
-                $http.get("/iTrust2/api/v1/vaccinationcertificate").then((response) => {
-                    // Do nothing with the response entity on SUCCESS
+                $scope.errorMessage = "";
+
+                // Do nothing with the response entity on SUCCESS
                     // IDEAS
                     //    Stop the loading animation for the submit button
                     //    Refresh the prompt text
@@ -54,7 +55,10 @@
                     //
                     // Do something with the response entity on ERROR
                     //    Print error message
-                });
+
+                $scope.getVaccinationStatus = function() {
+                    window.open("/iTrust2/api/v1/vaccinationstatus", "_blank");
+                }
             });
             /*]]>*/
         </script>
@@ -70,8 +74,8 @@
                             <div class="panel-body">
                                 <div class="panel-body-inner">
                                     <p class="panel-para">Pressing the button will prompt you to download a PDF of your current vaccination status.</p>
-                                    <button class="btn btn-success panel-generate">Generate Vaccine Certificate</button>
-                                    <p class="panel-para error-para">[ ERROR MSG ]</p>
+                                    <button class="btn btn-success panel-generate" ng-click="getVaccinationStatus()">Generate Vaccine Certificate</button>
+                                    <p class="panel-para error-para">{{errorMessage}}</p>
                                 </div>
                             </div>
                         </div>

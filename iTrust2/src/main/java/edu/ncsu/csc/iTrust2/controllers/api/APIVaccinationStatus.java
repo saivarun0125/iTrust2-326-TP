@@ -243,13 +243,15 @@ public class APIVaccinationStatus extends APIController {
         }
 
         boolean isFullyVaccinated = false;
+        boolean isMixAndMatch = false;
 
         // check for the mix and match string in any of the office visits
-        final String mixAndMatchString = " This vaccine dose now certifies " + self
+        final String mixAndMatchString = " This vaccine dose now certifies " + self.getUsername()
                 + " as fully vaccinated as per the CDC and FDA's guidelines on interchangeably dosing with Covid19 vaccines.";
         for ( final VaccineOfficeVisit visit : listOfficeVisits ) {
             if ( visit.getNotes() != null && visit.getNotes().contains( mixAndMatchString ) ) {
                 isFullyVaccinated = true;
+                isMixAndMatch = true;
             }
         }
 
@@ -314,7 +316,12 @@ public class APIVaccinationStatus extends APIController {
             greenText.setFontColor( green );
             greenText.setBold();
             // lets the user know if they are fully vaccinated
-            if ( isFullyVaccinated ) {
+            if ( isFullyVaccinated && isMixAndMatch ) {
+                vaccinationStatus.add( p.getFirstName() + " " + p.getLastName()
+                        + " is fully vaccinated as per the FDA and CDC's guidelines on interchangeably dosing with Covid19 vaccinations.\n" );
+                vaccinationStatus.addStyle( greenText );
+            }
+            else if ( isFullyVaccinated ) {
                 vaccinationStatus.add( p.getFirstName() + " " + p.getLastName() + " is fully vaccinated.\n" );
                 vaccinationStatus.addStyle( greenText );
             }

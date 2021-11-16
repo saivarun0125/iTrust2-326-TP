@@ -15,12 +15,16 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.itextpdf.kernel.colors.Color;
+import com.itextpdf.kernel.colors.DeviceRgb;
 import com.itextpdf.kernel.pdf.PdfDocument;
 import com.itextpdf.kernel.pdf.PdfWriter;
 import com.itextpdf.layout.Document;
+import com.itextpdf.layout.Style;
 import com.itextpdf.layout.element.Paragraph;
 
 import edu.ncsu.csc.iTrust2.models.Patient;
+import edu.ncsu.csc.iTrust2.models.Personnel;
 import edu.ncsu.csc.iTrust2.models.User;
 import edu.ncsu.csc.iTrust2.models.VaccineOfficeVisit;
 import edu.ncsu.csc.iTrust2.models.enums.TransactionType;
@@ -151,30 +155,77 @@ public class APIVaccinationStatus extends APIController {
             final PdfWriter writer = new PdfWriter( path );
             final PdfDocument pdf = new PdfDocument( writer );
             final Document document = new Document( pdf );
-            final Paragraph para = new Paragraph( "Vaccination Record\n" )
-                    .add( "Patient: " + p.getFirstName() + " " + p.getLastName() + "\n" );
 
+            final Style style = new Style();
+            style.setBold();
+
+            // header style for the title
+            final Style headerStyle = new Style();
+            headerStyle.setBold();
+            headerStyle.setFontSize( 30 );
+
+            // sub header style for the subheader that has the patients first
+            // and last name
+            final Style subHeaderStyle = new Style();
+            subHeaderStyle.setUnderline();
+            subHeaderStyle.setFontSize( 15 );
+
+            // style for the body
+            final Style bodyStyle = new Style();
+            bodyStyle.setFontSize( 10 );
+
+            // create the header and add style
+            final Paragraph header = new Paragraph( "Vaccination Record\n" );
+            header.addStyle( headerStyle );
+
+            // create the subheader that has the patient's name and set style
+            final Paragraph subHeader = new Paragraph()
+                    .add( "Patient: " + p.getFirstName() + " " + p.getLastName() + "\n" );
+            subHeader.addStyle( subHeaderStyle );
+
+            // create the body of the pdf
+            final Paragraph body = new Paragraph();
+
+            final Paragraph vaccinationStatus = new Paragraph();
+            // set up red color
+            final Style redText = new Style();
+            final Color red = new DeviceRgb( 171, 55, 55 );
+            redText.setFontColor( red );
+            redText.setBold();
+            // set up green color
+            final Style greenText = new Style();
+            final Color green = new DeviceRgb( 56, 168, 86 );
+            greenText.setFontColor( green );
+            greenText.setBold();
             // lets the user know if they are fully vaccinated
             if ( isFullyVaccinated ) {
-                para.add( p.getFirstName() + " " + p.getLastName() + " is fully vaccinated.\n\n" );
+                vaccinationStatus.add( p.getFirstName() + " " + p.getLastName() + " is fully vaccinated.\n" );
+                vaccinationStatus.addStyle( greenText );
             }
             else {
-                para.add( p.getFirstName() + " " + p.getLastName() + " is NOT fully vaccinated.\n\n" );
+                vaccinationStatus.add( p.getFirstName() + " " + p.getLastName() + " is NOT fully vaccinated.\n" );
+                vaccinationStatus.addStyle( redText );
             }
+
+            document.add( header );
+            document.add( subHeader );
+            document.add( vaccinationStatus );
 
             // list out the all the doses that the patient has recieved
             for ( final VaccineOfficeVisit visit : listOfficeVisits ) {
-                para.add( "___________________________________________________\n" );
-                para.add( visit.getVaccine().getName() + ": \n" );
-                para.add( "Dose number: " + visit.getDoseNumber() + ": \n" );
+                body.add( "______________________________________________________________________\n" );
+                body.add( visit.getVaccine().getName() + ": \n" );
+                body.add( "Dose number: " + visit.getDoseNumber() + "\n" );
                 final DateTimeFormatter format = DateTimeFormatter.ofPattern( "MM/dd/yyyy" );
-                para.add( visit.getDate().format( format ) + ": \n" );
-                para.add( "Hospital: " + visit.getHospital() + ": \n" );
-                para.add( "Vaccinator: " + visit.getHcp() + ": \n" );
-                para.add( "___________________________________________________\n" );
+                body.add( "Date: " + visit.getDate().format( format ) + "\n" );
+                body.add( "Hospital: " + visit.getHospital() + "\n" );
+                final Personnel hcpPers = (Personnel) visit.getHcp();
+                body.add( "Vaccinator: " + hcpPers.getFirstName() + " " + hcpPers.getLastName() + "\n" );
             }
 
-            document.add( para );
+            body.add( "______________________________________________________________________\n" );
+
+            document.add( body );
             document.close();
         }
         catch ( final FileNotFoundException e ) {

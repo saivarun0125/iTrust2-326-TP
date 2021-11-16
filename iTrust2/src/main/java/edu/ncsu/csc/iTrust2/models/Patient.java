@@ -185,6 +185,14 @@ public class Patient extends User {
 
         setGender( Gender.parse( form.getGender() ) );
 
+        // setVaccineId( form.getVaccineId() );
+        // setVaccineDoses( form.getVaccineDoses() );
+        // setFullyVaccinated( form.isFullyVaccinated() );
+        // setFirstShot( LocalDate.parse( form.getFirstShot() ) );
+        // setSecondShot( LocalDate.parse( form.getSecondShot() ) );
+        // setVaccinatorFirst( form.getVaccinatorFirst() );
+        // setVaccinatorSecond( form.getVaccinatorSecond() );
+
         return this;
     }
 
@@ -426,7 +434,7 @@ public class Patient extends User {
     }
 
     /**
-     * Sets the patient's cause of death
+     * Sets the patient's cause of deathhh
      *
      * @param causeOfDeath
      *            New cause of death

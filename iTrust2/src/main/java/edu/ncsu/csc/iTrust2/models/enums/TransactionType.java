@@ -588,7 +588,7 @@ public enum TransactionType {
     /**
      * Patient views vaccine office visit
      */
-    VACCINE_OFFICE_VISIT_PATIENT_VIEW ( 3203, "View vaccine ffice visit by Patient", true ),
+    VACCINE_OFFICE_VISIT_PATIENT_VIEW ( 3203, "View vaccine office visit by Patient", true ),
     /**
      * Patient deleted all vaccine office visits
      */

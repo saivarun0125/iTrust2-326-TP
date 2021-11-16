@@ -22,6 +22,7 @@
 		<checkstyle.includeTestResources>true</checkstyle.includeTestResources>
 		<cucumber.options>--plugin json:target/cucumber.json</cucumber.options>
 		<cucumber.version>6.9.0</cucumber.version>
+		<itext.version>7.2.0</itext.version>
 	</properties>
 
 
@@ -113,6 +114,14 @@
 			<artifactId>mysql-connector-java</artifactId>
 			<scope>runtime</scope>
 		</dependency>
+		
+		<!-- add all iText 7 modules -->
+    	<dependency>
+        	<groupId>com.itextpdf</groupId>
+        	<artifactId>itext7-core</artifactId>
+        	<version>${itext.version}</version>
+        	<type>pom</type>
+    	</dependency>
 
 	</dependencies>
 

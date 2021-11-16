@@ -64,6 +64,7 @@ public class CovidVaccine extends Drug {
     }
 
     /**
+
      * constructs a covid vaccine with provided info
      *
      * @param code

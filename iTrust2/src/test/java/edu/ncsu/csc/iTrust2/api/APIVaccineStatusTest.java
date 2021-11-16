@@ -169,7 +169,7 @@ public class APIVaccineStatusTest {
     @WithMockUser ( username = "patient1", roles = { "PATIENT" } )
     public void testVaccineStatus () throws Exception {
 
-        mvc.perform( get( "/api/v1/vaccinationstatus/generatecertificate" ) ).andExpect( status().isOk() );
+        mvc.perform( get( "/api/v1/vaccinationstatus/test" ) ).andExpect( status().isOk() );
 
     }
 

@@ -434,7 +434,7 @@ public class Patient extends User {
     }
 
     /**
-     * Sets the patient's cause of death
+     * Sets the patient's cause of deathhh
      *
      * @param causeOfDeath
      *            New cause of death

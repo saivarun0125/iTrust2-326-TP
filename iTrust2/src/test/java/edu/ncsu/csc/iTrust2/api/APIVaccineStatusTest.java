@@ -88,7 +88,13 @@ public class APIVaccineStatusTest {
 
         covidVaccineService.deleteAll();
 
-        final User hcp = new Personnel( new UserForm( "hcp", "123456", Role.ROLE_HCP, 1 ) );
+        User hcp = new Personnel( new UserForm( "hcp", "123456", Role.ROLE_HCP, 1 ) );
+
+        final Personnel hcpPers = (Personnel) hcp;
+        hcpPers.setFirstName( "Jeff" );
+        hcpPers.setLastName( "Jefferson" );
+
+        hcp = hcpPers;
 
         final Patient patient1 = buildPatient( "patient1" );
         userService.save( patient1 );
@@ -121,7 +127,7 @@ public class APIVaccineStatusTest {
         final VaccineOfficeVisitForm form2 = new VaccineOfficeVisitForm();
         final LocalDate date2 = LocalDate.of( 2021, 11, 20 );
         form2.setDate( "2030-11-19T04:50:00.000-05:00" );
-        form2.setDoseNumber( 1 );
+        form2.setDoseNumber( 2 );
         form2.setHcp( hcp.getUsername() );
         form2.setHospital( hosp.getName() );
         form2.setPatient( patient1.getUsername() );
@@ -143,7 +149,7 @@ public class APIVaccineStatusTest {
         antti.setDateOfBirth( date );
         antti.setEmail( "antti@itrust.fi" );
         antti.setEthnicity( Ethnicity.Caucasian );
-        antti.setFirstName( name );
+        antti.setFirstName( "Erik" );
         antti.setGender( Gender.Male );
         antti.setLastName( "Walhelm" );
         antti.setPhone( "123-456-7890" );
@@ -163,7 +169,7 @@ public class APIVaccineStatusTest {
     @WithMockUser ( username = "patient1", roles = { "PATIENT" } )
     public void testVaccineStatus () throws Exception {
 
-        mvc.perform( get( "/api/v1/vaccinationstatus/generatecertificate" ) ).andExpect( status().isOk() );
+        mvc.perform( get( "/api/v1/vaccinationstatus/test" ) ).andExpect( status().isOk() );
 
     }
 

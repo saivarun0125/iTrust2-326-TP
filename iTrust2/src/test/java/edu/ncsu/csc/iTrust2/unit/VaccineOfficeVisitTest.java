@@ -2,6 +2,7 @@ package edu.ncsu.csc.iTrust2.unit;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.time.ZonedDateTime;
@@ -182,16 +183,6 @@ public class VaccineOfficeVisitTest {
             // pass
         }
 
-        // This isn't working...
-        // try {
-        // visit.setDoseNumber( -1 );
-        // vaccineOfficeVisitService.save( visit );
-        // Assert.fail();
-        // }
-        // catch ( final Exception e ) {
-        // // pass
-        // }
-
         try {
             visit.setDoseNumber( -1 );
             visit.validateDoseNumber();
@@ -252,6 +243,75 @@ public class VaccineOfficeVisitTest {
             // pass
         }
 
+        CovidVaccine vaxTest = null;
+        visit.setVaccine( vaxTest );
+        try {
+            visit.validateVaccine();
+            Assert.fail();
+        }
+        catch ( final Exception e ) {
+            assertEquals( e.getMessage(), "Vaccine must be entered" );
+            // pass
+        }
+
+        vaxTest = new CovidVaccine();
+        vaxTest.setAgeRange( ageRange2 );
+        vaxTest.setCode( "0200-0000-00" );
+        vaxTest.setDescription( "AH" );
+        vaxTest.setDoseInterval( doseInterval2 );
+        vaxTest.setName( "AH COVID19 Vaccine" );
+        vaxTest.setNumDoses( (short) 2 );
+
+        final List<Integer> ageRange3 = new ArrayList<Integer>();
+        final DoseInterval doseInterval3 = null;
+
+        vaxTest.setAgeRange( ageRange3 );
+        visit.setVaccine( vaxTest );
+        try {
+            visit.validateVaccine();
+            Assert.fail();
+        }
+        catch ( final Exception e ) {
+            assertEquals( e.getMessage(), "The age range must consist of two whole numbers." );
+            // pass
+        }
+
+        vaxTest.setAgeRange( ageRange2 );
+        vaxTest.setDoseInterval( doseInterval3 );
+        visit.setVaccine( vaxTest );
+        try {
+            visit.validateVaccine();
+            Assert.fail();
+        }
+        catch ( final Exception e ) {
+            assertEquals( e.getMessage(), "There must be a proper dose interval." );
+            // pass
+        }
+
+        vaxTest.setDoseInterval( doseInterval2 );
+        vaxTest.setNumDoses( (short) -1 );
+        visit.setVaccine( vaxTest );
+        try {
+            visit.validateVaccine();
+            Assert.fail();
+        }
+        catch ( final Exception e ) {
+            assertEquals( e.getMessage(), "There must be a positive number of doses." );
+            // pass
+        }
+
+        vaxTest.setNumDoses( (short) 2 );
+        visit.setVaccine( vaxTest );
+        visit.setType( AppointmentType.GENERAL_CHECKUP );
+        try {
+            visit.validateVaccine();
+            Assert.fail();
+        }
+        catch ( final Exception e ) {
+            assertEquals( e.getMessage(), "Vaccines can only be entered into vacicnation appointments." );
+            // pass
+        }
+
     }
 
     @Test
@@ -288,17 +348,20 @@ public class VaccineOfficeVisitTest {
         visit.setVaccine( vaccine );
         visit.setDoseNumber( 1 );
         visit.setScheduled( true );
+        visit.setAppointment( null );
 
         vaccineOfficeVisitService.save( visit );
 
         assertEquals( 1, vaccineOfficeVisitService.count() );
 
         final VaccineOfficeVisit retrieved = vaccineOfficeVisitService.findAll().get( 0 );
+
         assertNotNull( retrieved );
 
         assertEquals( "Pfizer COVID19 Vaccine", retrieved.getVaccine().getName() );
 
         assertNotNull( retrieved.getVaccine() );
+        assertNull( retrieved.getAppointment() );
 
         assertEquals( 1, (int) retrieved.getDoseNumber() );
 

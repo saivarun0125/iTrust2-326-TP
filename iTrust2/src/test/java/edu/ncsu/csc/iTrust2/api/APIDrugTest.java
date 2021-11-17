@@ -1,6 +1,7 @@
 package edu.ncsu.csc.iTrust2.api;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -30,8 +31,15 @@ import com.google.gson.GsonBuilder;
 
 import edu.ncsu.csc.iTrust2.common.TestUtils;
 import edu.ncsu.csc.iTrust2.forms.DrugForm;
+import edu.ncsu.csc.iTrust2.forms.PrescriptionForm;
+import edu.ncsu.csc.iTrust2.forms.UserForm;
 import edu.ncsu.csc.iTrust2.models.Drug;
+import edu.ncsu.csc.iTrust2.models.Patient;
+import edu.ncsu.csc.iTrust2.models.Prescription;
+import edu.ncsu.csc.iTrust2.models.enums.Role;
 import edu.ncsu.csc.iTrust2.services.DrugService;
+import edu.ncsu.csc.iTrust2.services.PatientService;
+import edu.ncsu.csc.iTrust2.services.PrescriptionService;
 
 /**
  * Class for testing drug API.
@@ -50,6 +58,12 @@ public class APIDrugTest {
 
     @Autowired
     private DrugService           service;
+
+    @Autowired
+    private PrescriptionService   pservice;
+
+    @Autowired
+    private PatientService        patserv;
 
     /**
      * Sets up test
@@ -134,6 +148,58 @@ public class APIDrugTest {
         drug2.setCode( "0000-0000-03" );
         mvc.perform( put( "/api/v1/drugs" ).contentType( MediaType.APPLICATION_JSON )
                 .content( TestUtils.asJsonString( drug2 ) ) ).andExpect( status().isOk() );
+
+    }
+
+    /**
+     * Tests basic prescription API functionality.
+     *
+     * @throws UnsupportedEncodingException
+     * @throws Exception
+     */
+    @SuppressWarnings ( "unchecked" )
+    @Test
+    @Transactional
+    @WithMockUser ( username = "HCP", roles = { "USER", "HCP" } )
+    public void testPrescriptionAPI () throws UnsupportedEncodingException, Exception {
+
+        if ( !service.existsByCode( "1234-5678-90" ) ) {
+            final DrugForm drugForm = new DrugForm();
+            drugForm.setCode( "1234-5678-90" );
+            drugForm.setDescription( "Tylenol - Acetominophen" );
+            drugForm.setName( "Tylenol" );
+            service.save( new Drug( drugForm ) );
+        }
+        if ( !patserv.existsByName( "headachepatient" ) ) {
+            patserv.save( new Patient( new UserForm( "headachepatient", "patient", Role.ROLE_PATIENT, 1 ) ) );
+        }
+
+        final PrescriptionForm pf = new PrescriptionForm();
+        pf.setDrug( "1234-5678-90" );
+        pf.setDosage( 50 );
+        pf.setPatient( "headachepatient" );
+        pf.setStartDate( "2021-01-01" );
+        pf.setEndDate( "2022-02-02" );
+
+        final String content1 = mvc
+                .perform( post( "/api/v1/prescriptions" ).contentType( MediaType.APPLICATION_JSON )
+                        .content( TestUtils.asJsonString( pf ) ) )
+                .andExpect( status().isOk() ).andReturn().getResponse().getContentAsString();
+
+        final Gson gson = new GsonBuilder().create();
+        final Prescription p1 = gson.fromJson( content1, Prescription.class );
+        assertEquals( pf.getDrug(), p1.getDrug().getCode() );
+        assertEquals( pf.getDosage(), p1.getDosage() );
+        assertEquals( pf.getPatient(), p1.getPatient().getUsername() );
+
+        final PrescriptionForm pf2 = new PrescriptionForm();
+
+        final String content2 = mvc
+                .perform( post( "/api/v1/prescriptions" ).contentType( MediaType.APPLICATION_JSON )
+                        .content( TestUtils.asJsonString( pf2 ) ) )
+                .andExpect( status().isBadRequest() ).andReturn().getResponse().getContentAsString();
+
+        assertTrue( content2.contains( "Could not save the prescription: " ) );
 
     }
 

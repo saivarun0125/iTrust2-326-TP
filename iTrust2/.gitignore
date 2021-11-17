@@ -56,3 +56,6 @@ target/*
 
 # Hibernate configuration with password
 src/main/resources/application.yml
+
+# Test PDF file for UC21
+certificates/*.pdf

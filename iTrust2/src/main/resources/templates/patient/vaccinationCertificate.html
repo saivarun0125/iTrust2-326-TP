@@ -59,6 +59,10 @@
                 $scope.getVaccinationStatus = function() {
                     window.open("/iTrust2/api/v1/vaccinationstatus", "_blank");
                 }
+				
+				$http.post("/iTrust2/api/v1/vaccinationstatus").then((response) => {
+					document.getElementById("generate-btn").disabled = !response.data;
+				});
             });
             /*]]>*/
         </script>
@@ -74,7 +78,7 @@
                             <div class="panel-body">
                                 <div class="panel-body-inner">
                                     <p class="panel-para">Pressing the button will prompt you to download a PDF of your current vaccination status.</p>
-                                    <button class="btn btn-success panel-generate" ng-click="getVaccinationStatus()">Generate Vaccine Certificate</button>
+                                    <button id="generate-btn" class="btn btn-success panel-generate" ng-click="getVaccinationStatus()">Generate Vaccine Certificate</button>
                                     <p class="panel-para error-para">{{errorMessage}}</p>
                                 </div>
                             </div>

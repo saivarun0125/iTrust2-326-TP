@@ -1,6 +1,7 @@
 package edu.ncsu.csc.iTrust2.api;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.time.LocalDate;
@@ -171,6 +172,14 @@ public class APIVaccineStatusTest {
 
         mvc.perform( get( "/api/v1/vaccinationstatus/test" ) ).andExpect( status().isOk() );
 
+    }
+    
+    @Test
+    @Transactional
+    @WithMockUser( username = "patient1", roles = { "PATIENT" } )
+    public void testUserVaccinated() throws Exception {
+    	
+    	mvc.perform( post("/api/v1/vaccinationstatus" ) ).andExpect( status().isOk() );
     }
 
     // /**

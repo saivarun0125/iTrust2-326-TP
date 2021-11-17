@@ -19,6 +19,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.itextpdf.kernel.colors.Color;
@@ -208,6 +209,27 @@ public class APIVaccinationStatus extends APIController {
         }
 
         return new ResponseEntity( path, HttpStatus.OK );
+    }
+    
+    /**
+     * Endpoint for determining if the user has been vaccinated at
+     * least once - used for enabling or disabling the ability of
+     * the user to generate the PDF
+     * 
+     * @return ResponseEntity with error if the user was not in the system,
+     * 		   an entity with true if the user has been vaccinated at
+     * 		   least once, and false if the user has not been vaccinated
+     */
+    @PostMapping( value = BASE_PATH + "/vaccinationstatus" )
+    @PreAuthorize( "hasRole('ROLE_PATIENT')" )
+    public ResponseEntity<Boolean> userHasBeenVaccinatedOnce() {
+    	final User self = userService.findByName( LoggerUtil.currentUser() );
+        if ( self == null ) {
+            return new ResponseEntity( errorResponse( "Patient not found" ), HttpStatus.NOT_FOUND );
+        }
+        final List<VaccineOfficeVisit> listOfficeVisits = vaccineOfficeVisitService.findByPatient( self );
+        
+        return new ResponseEntity( !listOfficeVisits.isEmpty(), HttpStatus.OK );
     }
 
     /**

@@ -4,36 +4,6 @@
     <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
     <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.4/angular.min.js"></script>
     <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
-
-    <style>
-        div.panel-body-inner {
-            width: 100%;
-            height: 75%;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-        }
-
-        p.panel-para {
-            font-size: 2rem;
-            width: 25%;
-            text-align: center;
-            margin-top: 30px;
-        }
-
-        p.panel-para.error-para {
-            font-style: italic;
-            color: #f00;
-        }
-
-        button.panel-generate {
-            font-size: 2rem;
-            padding: 10px 0;
-            margin-top: 30px;
-            width: 50%;
-        }
-    </style>
 </head>
 
 <body th:include="layout :: body" th:with="content=~{::content}">
@@ -61,7 +31,12 @@
                 }
 				
 				$http.post("/iTrust2/api/v1/vaccinationstatus").then((response) => {
-					document.getElementById("generate-btn").disabled = !response.data;
+					const nvem = document.getElementById("no-vaccines-error-msg").classList.remove("hidden");
+				
+					if(!response.data) {
+						document.getElementById("generate-btn").disabled = true;
+						nvem.classList.remove("hidden");
+					}
 				});
             });
             /*]]>*/
@@ -78,6 +53,7 @@
                             <div class="panel-body">
                                 <div>
                                     <p>Pressing the button will prompt you to download a PDF of your current vaccination status.</p>
+									<p style="font-style: italic; color: #f00" id="no-vaccines-error-msg" class="hidden">You have not had any COVID vaccine shots.</p>
                                     <button class="btn btn-success" id="generate-btn" ng-click="getVaccinationStatus()" disabled>Generate Vaccine Certificate</button>
                                     <p>{{errorMessage}}</p>
                                 </div>

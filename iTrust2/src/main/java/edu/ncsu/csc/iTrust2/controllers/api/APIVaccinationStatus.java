@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -214,9 +215,9 @@ public class APIVaccinationStatus extends APIController {
      *
      * @return vaccinatino status of patient
      */
-    @GetMapping ( BASE_PATH + "/vaccinationstatus" )
+    @GetMapping ( value = BASE_PATH + "/vaccinationstatus", produces = MediaType.APPLICATION_PDF_VALUE )
     @PreAuthorize ( "hasRole('ROLE_PATIENT')" )
-    public ResponseEntity<byte[]> generateCertificate () {
+    public ResponseEntity<ByteArrayResource> generateCertificate () {
         final User self = userService.findByName( LoggerUtil.currentUser() );
         final boolean fullyVaccinated = false;
         if ( self == null ) {
@@ -242,13 +243,15 @@ public class APIVaccinationStatus extends APIController {
         }
 
         boolean isFullyVaccinated = false;
+        boolean isMixAndMatch = false;
 
         // check for the mix and match string in any of the office visits
-        final String mixAndMatchString = " This vaccine dose now certifies " + self
+        final String mixAndMatchString = " This vaccine dose now certifies " + self.getUsername()
                 + " as fully vaccinated as per the CDC and FDA's guidelines on interchangeably dosing with Covid19 vaccines.";
         for ( final VaccineOfficeVisit visit : listOfficeVisits ) {
             if ( visit.getNotes() != null && visit.getNotes().contains( mixAndMatchString ) ) {
                 isFullyVaccinated = true;
+                isMixAndMatch = true;
             }
         }
 
@@ -264,7 +267,7 @@ public class APIVaccinationStatus extends APIController {
         final File f = new File( path );
         f.getParentFile().mkdirs();
 
-        ResponseEntity<byte[]> response;
+        ResponseEntity<ByteArrayResource> response;
 
         try {
             final PdfWriter writer = new PdfWriter( path );
@@ -313,7 +316,12 @@ public class APIVaccinationStatus extends APIController {
             greenText.setFontColor( green );
             greenText.setBold();
             // lets the user know if they are fully vaccinated
-            if ( isFullyVaccinated ) {
+            if ( isFullyVaccinated && isMixAndMatch ) {
+                vaccinationStatus.add( p.getFirstName() + " " + p.getLastName()
+                        + " is fully vaccinated as per the FDA and CDC's guidelines on interchangeably dosing with Covid19 vaccinations.\n" );
+                vaccinationStatus.addStyle( greenText );
+            }
+            else if ( isFullyVaccinated ) {
                 vaccinationStatus.add( p.getFirstName() + " " + p.getLastName() + " is fully vaccinated.\n" );
                 vaccinationStatus.addStyle( greenText );
             }
@@ -352,12 +360,15 @@ public class APIVaccinationStatus extends APIController {
                 return new ResponseEntity( e.getMessage(), HttpStatus.EXPECTATION_FAILED );
             }
 
+            final ByteArrayResource resource = new ByteArrayResource( pdfBytes );
+
             final HttpHeaders headers = new HttpHeaders();
             headers.setContentType( MediaType.APPLICATION_PDF );
-            headers.setContentDispositionFormData( self.getId() + "_vax_cert.pdf", self.getId() + "_vax_cert.pdf" );
-            headers.setCacheControl( "must-revalidate, post-check=0, pre-check=0" );
+            // Here you have to set the actual filename of your pdf
+            final String filename = self.getId() + "_vax_cert.pdf";
+            headers.add( HttpHeaders.CONTENT_DISPOSITION, "inline;filename=" + filename );
 
-            response = new ResponseEntity<>( pdfBytes, headers, HttpStatus.OK );
+            response = new ResponseEntity<ByteArrayResource>( resource, headers, HttpStatus.OK );
         }
         catch ( final FileNotFoundException e ) {
             return new ResponseEntity( e.getMessage(), HttpStatus.EXPECTATION_FAILED );

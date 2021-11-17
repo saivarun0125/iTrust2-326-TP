@@ -68,7 +68,7 @@ public class APIVaccineAppointmentRequestController extends APIController {
      * @return list of vaccine appointment requests
      */
     @GetMapping ( BASE_PATH + "/vaccineappointmentrequests" )
-    @PreAuthorize ( "hasAnyRole('ROLE_HCP')" )
+    @PreAuthorize ( "hasAnyRole('ROLE_HCP', 'ROLE_VACCINATOR')" )
     public List<VaccineAppointmentRequest> getVaccineAppointmentRequests () {
         final List<VaccineAppointmentRequest> requests = service.findAll();
 
@@ -99,13 +99,26 @@ public class APIVaccineAppointmentRequestController extends APIController {
      * @return list of appointment requests for the logged in HCP
      */
     @GetMapping ( BASE_PATH + "/vaccineappointmentrequestForHCP" )
-    @PreAuthorize ( "hasAnyRole('ROLE_HCP')" )
+    @PreAuthorize ( "hasAnyRole('ROLE_HCP', 'ROLE_VACCINATOR')" )
     public List<VaccineAppointmentRequest> getVaccineAppointmentRequestsForHCP () {
 
         final User hcp = userService.findByName( LoggerUtil.currentUser() );
 
         return service.findByHcp( hcp ).stream().filter( e -> e.getStatus().equals( Status.PENDING ) )
                 .collect( Collectors.toList() );
+
+    }
+
+    /*
+     * Gets the vaccination appointment requests for the specified vaccinator
+     */
+    @GetMapping ( BASE_PATH + "/vaccineappointmentrequestForVaccinator" )
+    @PreAuthorize ( "hasAnyRole('ROLE_VACCINATOR')" )
+    public List<VaccineAppointmentRequest> getVaccineAppointmentRequestsForVaccinator () {
+
+        final User hcp = userService.findByName( LoggerUtil.currentUser() );
+
+        return service.findByHcp( hcp ).stream().collect( Collectors.toList() );
 
     }
 
@@ -118,7 +131,7 @@ public class APIVaccineAppointmentRequestController extends APIController {
      *         HttpStatus.NOT_FOUND if no such AppointmentRequest could be found
      */
     @GetMapping ( BASE_PATH + "/vaccineappointmentrequests/{id}" )
-    @PreAuthorize ( "hasAnyRole('ROLE_HCP', 'ROLE_PATIENT')" )
+    @PreAuthorize ( "hasAnyRole('ROLE_HCP', 'ROLE_PATIENT', 'ROLE_VACCINATOR')" )
     public ResponseEntity getVaccineAppointmentRequest ( @PathVariable ( "id" ) final Long id ) {
         final VaccineAppointmentRequest request = service.findById( id );
         if ( null != request ) {
@@ -231,7 +244,7 @@ public class APIVaccineAppointmentRequestController extends APIController {
      * @return response
      */
     @DeleteMapping ( BASE_PATH + "/vaccineappointmentrequests/{id}" )
-    @PreAuthorize ( "hasAnyRole('ROLE_HCP', 'ROLE_PATIENT')" )
+    @PreAuthorize ( "hasAnyRole('ROLE_HCP', 'ROLE_PATIENT', 'ROLE_VACCINATOR')" )
     public ResponseEntity deleteVaccineAppointmentRequest ( @PathVariable final Long id ) {
         System.out.println( "Id of vaccine  appontment request: " + id );
         final VaccineAppointmentRequest request = service.findById( id );
@@ -271,7 +284,7 @@ public class APIVaccineAppointmentRequestController extends APIController {
      *         is provided
      */
     @PutMapping ( BASE_PATH + "/vaccineappointmentrequests/{id}" )
-    @PreAuthorize ( "hasAnyRole('ROLE_HCP', 'ROLE_PATIENT')" )
+    @PreAuthorize ( "hasAnyRole('ROLE_HCP', 'ROLE_PATIENT', 'ROLE_VACCINATOR')" )
     public ResponseEntity updateAppointmentRequest ( @PathVariable final Long id,
             @RequestBody final VaccineAppointmentRequestForm requestF ) {
         try {
@@ -323,7 +336,7 @@ public class APIVaccineAppointmentRequestController extends APIController {
      * @return The page to display for the user
      */
     @GetMapping ( BASE_PATH + "/vaccineAppointments" )
-    @PreAuthorize ( "hasAnyRole('ROLE_HCP')" )
+    @PreAuthorize ( "hasAnyRole('ROLE_HCP', 'ROLE_VACCINATOR')" )
     public List<VaccineAppointmentRequest> upcomingVaccineAppointments () {
         final User hcp = userService.findByName( LoggerUtil.currentUser() );
 

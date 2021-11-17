@@ -290,14 +290,23 @@
 										<li ng-repeat="vaxAppt in vaxAppointments"><span> <input
 												type="radio" ng-model="selectedAppointment.id" name="vaxAppt"
 												id="vaxAppt{{vaxAppt.id}}" value="{{vaxAppt.id}}" required="true" />
-												<label for="vaxAppt{{vaxAppt.id}}"
+												<label ng-if="!vaxAppt.comments" for="vaxAppt{{vaxAppt.id}}"
 												style="vertical-align: middle; padding-left: 10px; cursor: pointer;">
 													Type: {{vaxAppt.type | humanize}}<br /> Date: {{vaxAppt.date |
 													date : 'MM/dd/yyyy'}}<br /> Time: {{vaxAppt.date | date :
 													'shortTime'}}<br /> Status: {{vaxAppt.status | humanize}}
 													<br /> Requested Vaccine: {{ vaxAppt.vaccine.name | humanize}}
 													<br /> HCP or Vaccinator: {{vaxAppt.hcp.username | humanize}}
-													<br /> Comments: {{vaxAppt.comments | humanize}}
+													<br /> Comments:
+											</label>
+												<label ng-if="vaxAppt.comments" for="vaxAppt{{vaxAppt.id}}"
+												style="vertical-align: middle; padding-left: 10px; cursor: pointer;">
+													Type: {{vaxAppt.type | humanize}}<br /> Date: {{vaxAppt.date |
+													date : 'MM/dd/yyyy'}}<br /> Time: {{vaxAppt.date | date :
+													'shortTime'}}<br /> Status: {{vaxAppt.status | humanize}}
+													<br /> Requested Vaccine: {{ vaxAppt.vaccine.name | humanize}}
+													<br /> HCP or Vaccinator: {{vaxAppt.hcp.username | humanize}}
+													<br /> Comments: {{ vaxAppt.comments | humanize}}
 											</label>
 										</span></li>
 									</ul>

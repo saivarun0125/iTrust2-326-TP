@@ -183,7 +183,7 @@
 							$scope.errorMsg1 = "";
 							$scope.selectedAppointment = {};
 						}, function(rejection) {
-							$scope.errorMsg += rejection.data.message
+							$scope.errorMsg += "Failed to submit vaccination appointment " + rejection.data.message
 							$scope.message = "";
 							$scope.message1 = "";
 						});

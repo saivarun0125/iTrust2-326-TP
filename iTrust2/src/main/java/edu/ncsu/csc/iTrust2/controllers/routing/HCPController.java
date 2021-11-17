@@ -75,7 +75,7 @@ public class HCPController {
      * @return The page to display to the user
      */
     @GetMapping ( "/hcp/appointmentRequests" )
-    @PreAuthorize ( "hasAnyRole('ROLE_HCP')" )
+    @PreAuthorize ( "hasAnyRole('ROLE_HCP', 'ROLE_VACCINATOR')" )
     public String requestAppointmentForm ( final Model model ) {
         return "hcp/appointmentRequests";
     }
@@ -88,7 +88,7 @@ public class HCPController {
      * @return Page to display to the user
      */
     @GetMapping ( "/hcp/documentOfficeVisit" )
-    @PreAuthorize ( "hasAnyRole('ROLE_HCP')" )
+    @PreAuthorize ( "hasAnyRole('ROLE_HCP', 'ROLE_VACCINATOR')" )
     public String documentOfficeVisit ( final Model model ) {
         return "/hcp/documentOfficeVisit";
     }

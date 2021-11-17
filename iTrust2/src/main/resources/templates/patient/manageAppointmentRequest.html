@@ -66,7 +66,7 @@
 					} else if (type === 'OPHTHALMOLOGY_SURGERY') {
 						// Gets all of the ophthalmologist personnel
 						$scope.getPersonnelByRole('OPH');
-					} else if (type === 'VACCINATION_APPOINTMENT') {
+					} else if (type === 'VACCINE_APPOINTMENT') {
 						// Gets all of the vaccinator personnel
 						$scope.getPersonnelByRole(['HCP', 'VACCINATOR']);
 					} else {
@@ -241,7 +241,7 @@
 					                $scope.errorMsg1 = "";
 					                $scope.selectedAppointment = {};
 					            }, function (rejection) {
-					                $scope.errorMsg1 = "Could not remove appointment";
+					                $scope.errorMsg1 += rejection.data.message
 					            });
 					}
 					else {
@@ -269,7 +269,7 @@
 				<div class="col-md-7">
 					<div class="panel panel-default">
 						<div class="panel-heading">
-							<h3 class="panel-title">Pending Medical Appointments</h3>
+							<h3 class="panel-title">Requested Medical Appointments</h3>
 						</div>
 						<div class="panel-body">
 							<div class="col radio-box">
@@ -295,7 +295,9 @@
 													Type: {{vaxAppt.type | humanize}}<br /> Date: {{vaxAppt.date |
 													date : 'MM/dd/yyyy'}}<br /> Time: {{vaxAppt.date | date :
 													'shortTime'}}<br /> Status: {{vaxAppt.status | humanize}}
-													<br /> Vaccine type: {{ vaxAppt.vaccine.name | humanize}}
+													<br /> Requested Vaccine: {{ vaxAppt.vaccine.name | humanize}}
+													<br /> HCP or Vaccinator: {{vaxAppt.hcp.username | humanize}}
+													<br /> Comments: {{vaxAppt.comments | humanize}}
 											</label>
 										</span></li>
 									</ul>
@@ -332,8 +334,16 @@
 									<select class="form-control" ng-options="vaccine.code as vaccine.name for vaccine in vaccines" ng-model="appointment.vaccine"></select>
 								</div>
 
-								<div class="form-group">
+								<div class="form-group" ng-show="appointment.type != 'VACCINE_APPOINTMENT'">
 									<label for="hcp">HCP:
+										</td> <select ng-model="appointment.hcp" name="hcp" id="hcp"
+										class="form-control" ng-disabled="!appointment.type">
+											<option ng-repeat="hcp in hcps" value="{{hcp.username}}">{{hcp.username}} ({{hcp.statistics.averageVisitSatisfaction == 0 ? 'N/A' : ((hcp.statistics.averageVisitSatisfaction + hcp.statistics.averageTreatmentSatisfaction) / 2 ) + '/5 stars'}})</option>
+									</select>
+								</div>
+								
+								<div class="form-group" ng-show="appointment.type == 'VACCINE_APPOINTMENT'">
+									<label for="hcp">HCP or Vaccinator:
 										</td> <select ng-model="appointment.hcp" name="hcp" id="hcp"
 										class="form-control" ng-disabled="!appointment.type">
 											<option ng-repeat="hcp in hcps" value="{{hcp.username}}">{{hcp.username}} ({{hcp.statistics.averageVisitSatisfaction == 0 ? 'N/A' : ((hcp.statistics.averageVisitSatisfaction + hcp.statistics.averageTreatmentSatisfaction) / 2 ) + '/5 stars'}})</option>

@@ -243,7 +243,7 @@ public class APIVaccineAppointmentRequestController extends APIController {
         /* Patient can't look at anyone else's requests */
         final User self = userService.findByName( LoggerUtil.currentUser() );
         if ( self.getRoles().contains( Role.ROLE_PATIENT ) && !request.getPatient().equals( self ) ) {
-            return new ResponseEntity( HttpStatus.UNAUTHORIZED );
+            return new ResponseEntity( errorResponse( "Could Not Delete: Unauthorized" ), HttpStatus.UNAUTHORIZED );
         }
         try {
             service.delete( request );
@@ -251,9 +251,7 @@ public class APIVaccineAppointmentRequestController extends APIController {
             return new ResponseEntity( id, HttpStatus.OK );
         }
         catch ( final Exception e ) {
-            return new ResponseEntity(
-                    errorResponse( "Could not delete " + request.toString() + " because of " + e.getMessage() ),
-                    HttpStatus.BAD_REQUEST );
+            return new ResponseEntity( errorResponse( "Could not delete: " + e.getMessage() ), HttpStatus.BAD_REQUEST );
         }
 
     }

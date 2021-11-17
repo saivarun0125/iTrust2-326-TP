@@ -76,10 +76,10 @@
                                 <h3>Vaccination Certificate</h3>
                             </div>
                             <div class="panel-body">
-                                <div class="panel-body-inner">
-                                    <p class="panel-para">Pressing the button will prompt you to download a PDF of your current vaccination status.</p>
-                                    <button id="generate-btn" class="btn btn-success panel-generate" ng-click="getVaccinationStatus()">Generate Vaccine Certificate</button>
-                                    <p class="panel-para error-para">{{errorMessage}}</p>
+                                <div>
+                                    <p>Pressing the button will prompt you to download a PDF of your current vaccination status.</p>
+                                    <button class="btn btn-success" id="generate-btn" ng-click="getVaccinationStatus()" disabled>Generate Vaccine Certificate</button>
+                                    <p>{{errorMessage}}</p>
                                 </div>
                             </div>
                         </div>

@@ -108,6 +108,7 @@ a {
 					var erdropdown = document.getElementById('er-dropdown');
 					var ltdropdown = document.getElementById('labtech-dropdown');
 					var virologistdropdown = document.getElementById('virologist-dropdown');
+					var vaccinatordropdown = document.getElementById('vaccinator-dropdown');
 					if (patientdropdown && !role.includes('PATIENT')) {
 						navbarparent.removeChild(patientdropdown);
 					}
@@ -125,6 +126,9 @@ a {
 					}
 					if (ltdropdown && !role.includes('LABTECH')) {
 						navbarparent.removeChild(ltdropdown);
+					}
+					if (vaccinatordropdown && !role.includes('VACCINATOR')) {
+						navbarparent.removeChild(vaccinatordropdown);
 					}
 
 				});
@@ -222,6 +226,26 @@ a {
 								id="editdemographics-patient">Edit Demographics</a></li>
 						</ul></li>
 				</ul>
+				
+				<!-- Vaccinator navbar -->
+				<ul id="vaccinator-dropdown" class="nav navbar-nav">
+					<li class="dropdown"><a class="dropdown-toggle"
+						data-toggle="dropdown" href="#" id="vaccinatorPatientDropDown">Patient<span class="caret"></span></a>
+						<ul class="dropdown-menu">
+							<li><a href="/iTrust2/hcp/appointmentRequests"
+								id="viewrequests">View Appointment Requests and Upcoming
+									Appointments</a></li>
+							<li><a href="/iTrust2/hcp/documentOfficeVisit"
+								id="documentOfficeVisit">Document Office Visit</a></li>
+						</ul></li>
+					<li class="dropdown"><a class="dropdown-toggle"
+						data-toggle="dropdown" href="#">Edit<span class="caret"></span></a>
+						<ul class="dropdown-menu">
+							<li><a href="/iTrust2/hcp/editOfficeVisit"
+								id="editOfficeVisit">Edit Office Visit</a></li>
+						</ul></li>
+				</ul>
+				
 				<ul id="extra-dropdown" class="nav navbar-nav">
 					<li><a
 						href="https://github.ncsu.edu/engr-csc326-staff/iTrust2-v8/wiki">About</a></li>

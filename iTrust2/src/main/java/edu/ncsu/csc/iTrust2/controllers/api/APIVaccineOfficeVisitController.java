@@ -53,7 +53,7 @@ public class APIVaccineOfficeVisitController extends APIController {
      * @return list of VaccineOfficeVisits
      */
     @GetMapping ( BASE_PATH + "/vaccineofficevisits" )
-    @PreAuthorize ( "hasAnyRole('ROLE_HCP')" )
+    @PreAuthorize ( "hasAnyRole('ROLE_HCP', 'ROLE_VACCINATOR')" )
     public List<VaccineOfficeVisit> getVaccineOfficeVisits () {
         loggerUtil.log( TransactionType.VIEW_ALL_VACCINE_OFFICE_VISITS, LoggerUtil.currentUser() );
         return vaccineOfficeVisitService.findAll();
@@ -65,7 +65,7 @@ public class APIVaccineOfficeVisitController extends APIController {
      * @return all of the VaccineOfficeVisits for the current HCP.
      */
     @GetMapping ( BASE_PATH + "/vaccineofficevisits/HCP" )
-    @PreAuthorize ( "hasAnyRole('ROLE_HCP')" )
+    @PreAuthorize ( "hasAnyRole('ROLE_HCP', 'ROLE_VACCINATOR')" )
     public List<VaccineOfficeVisit> getVaccineOfficeVisitsForHCP () {
         final User self = userService.findByName( LoggerUtil.currentUser() );
         loggerUtil.log( TransactionType.VIEW_ALL_VACCINE_OFFICE_VISITS, self );
@@ -96,7 +96,7 @@ public class APIVaccineOfficeVisitController extends APIController {
      * @return list of VaccineOfficeVisits
      */
     @GetMapping ( BASE_PATH + "/vaccineofficevisits/{id}" )
-    @PreAuthorize ( "hasAnyRole('ROLE_HCP')" )
+    @PreAuthorize ( "hasAnyRole('ROLE_HCP', 'ROLE_VACCINATOR')" )
     public ResponseEntity getVaccineOfficeVisit ( @PathVariable final Long id ) {
         final User self = userService.findByName( LoggerUtil.currentUser() );
         loggerUtil.log( TransactionType.VACCINE_OFFICE_VISIT_HCP_VIEW, self );
@@ -115,7 +115,7 @@ public class APIVaccineOfficeVisitController extends APIController {
      * @return response
      */
     @PostMapping ( BASE_PATH + "/vaccineofficevisits" )
-    @PreAuthorize ( "hasAnyRole('ROLE_HCP')" )
+    @PreAuthorize ( "hasAnyRole('ROLE_HCP', 'ROLE_VACCINATOR')" )
     public ResponseEntity createVaccineOfficeVisit ( @RequestBody final VaccineOfficeVisitForm visitForm ) {
         System.out.println( visitForm.getDoseNumber() );
         try {
@@ -179,7 +179,7 @@ public class APIVaccineOfficeVisitController extends APIController {
      * @return response
      */
     @PutMapping ( BASE_PATH + "/vaccineofficevisits/{id}" )
-    @PreAuthorize ( "hasAnyRole('ROLE_HCP')" )
+    @PreAuthorize ( "hasAnyRole('ROLE_HCP', 'ROLE_VACCINATOR')" )
     public ResponseEntity updateVaccineOfficeVisit ( @PathVariable final Long id,
             @RequestBody final VaccineOfficeVisitForm visitForm ) {
         try {

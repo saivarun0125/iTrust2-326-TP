@@ -99,6 +99,12 @@ public class VaccineAppointmentRequestService extends Service<VaccineAppointment
         final VaccineAppointmentRequest ar = new VaccineAppointmentRequest();
 
         ar.setPatient( userService.findByName( raf.getPatient() ) );
+
+        final Patient p = (Patient) ar.getPatient();
+        if ( p == null || p.getDateOfBirth() == null ) {
+            throw new IllegalArgumentException( "Patient must have a set age to request a vaccination appointment" );
+        }
+
         ar.setHcp( userService.findByName( raf.getHcp() ) );
 
         ar.setComments( raf.getComments() );
@@ -135,21 +141,23 @@ public class VaccineAppointmentRequestService extends Service<VaccineAppointment
         }
         ar.setType( at );
 
-        final Patient p = (Patient) ar.getPatient();
-        if ( p == null || p.getDateOfBirth() == null ) {
-            return ar; // we're done, patient can't be tested against
-        }
-
-        final LocalDate dob = p.getDateOfBirth();
-        int age = ar.getDate().getYear() - dob.getYear();
-        // Remove the -1 when changing the dob to OffsetDateTime
-        if ( ar.getDate().getMonthValue() < dob.getMonthValue() ) {
-            age -= 1;
-        }
-        else if ( ar.getDate().getMonthValue() == dob.getMonthValue() ) {
-            if ( ar.getDate().getDayOfMonth() < dob.getDayOfMonth() ) {
+        final LocalDate dob;
+        int age;
+        try {
+            dob = p.getDateOfBirth();
+            age = ar.getDate().getYear() - dob.getYear();
+            // Remove the -1 when changing the dob to OffsetDateTime
+            if ( ar.getDate().getMonthValue() < dob.getMonthValue() ) {
                 age -= 1;
             }
+            else if ( ar.getDate().getMonthValue() == dob.getMonthValue() ) {
+                if ( ar.getDate().getDayOfMonth() < dob.getDayOfMonth() ) {
+                    age -= 1;
+                }
+            }
+        }
+        catch ( final Exception e ) {
+            throw new IllegalArgumentException( "Patient must have a set age to request a vaccination appointment" );
         }
         // TODO: Do Dob testing relevent to Covid Vaccines
         if ( age < ar.getVaccine().getAgeRange().get( 0 ) || age > ar.getVaccine().getAgeRange().get( 1 ) ) {

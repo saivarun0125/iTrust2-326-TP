@@ -448,8 +448,10 @@
                             if ($scope.doseNumError == undefined)
                                 $scope.doseNumError = "";
                             $scope.doseNumError = "Patient isn't within the age range for the " + $scope.selectedVaccine.name + " vaccine.";
+							return false;
                         } else {
                             $scope.doseNumError = "";
+							return true;
                         }
                     }
 
@@ -588,7 +590,9 @@
 								$scope.doseNumError = "The dose number of this visit can't be equal to or less than their current dose (" + currentDosage + " " + plural + ").";
 								$scope.errorMsg = $scope.errorMsg.replace("Invalid dose number\n", '');
 								$scope.errorMsg += "Invalid dose number\n";
-							}  else {
+							}  else if (!$scope.ageRangeCheck()) {
+								// age is invalid
+							} else {
 								// if the above criteria aren't met, something is wrong, print error
 								$scope.doseNumError = "WARNING: " + firstName + " " + lastName + " has " + currentDosage + " recorded doses of the " + $scope.selectedVaccine.name + " vaccine. Their next dose should be dose number " + (currentDosage + 1) + ", please confirm that they have recieved doses elsewhere before continuing.";
 								$scope.unRecordedVisits = doseNumber - currentDosage - 1;

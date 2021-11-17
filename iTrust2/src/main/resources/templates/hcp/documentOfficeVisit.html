@@ -351,14 +351,9 @@
 					}
 
 					$scope.checkVaccinationStatus = function() {
-						console.log("check status");
-						console.log($scope.visit.patient);
-						console.log($scope.visit.type);
 						// abort if a vaccine hasn't been selected yet
 						if ($scope.visit.patient == undefined || $scope.visit.type != "VACCINE_APPOINTMENT")
 							return undefined;
-
-						console.log("past abort");
 
 						$http.get("/iTrust2/api/v1/vaccineofficevisits").then(
 						function (response) {
@@ -373,7 +368,6 @@
 								}
 							}
 							
-							console.log(vaccineDoses);
 
 							var firstName;
 							var lastName;
@@ -401,23 +395,17 @@
 								}
 							}
 
-							console.log(fullyVaccinatedMessage);
 
 							// check if user is fully vaccinated with mix and match
 							for (var i = 0; i < response.data.length; i++) {
 								// if the office visit is the user's
-								console.log(response.data[i].patient.username);
-								console.log($scope.visit.patient);
 								if (response.data[i].patient.username == $scope.visit.patient) {
 									// if the mix and match string is in the comments, they are fully vaccinated
-									console.log(response.data[i].notes);
 									if (response.data[i].notes != undefined && response.data[i].notes.includes(" This vaccine dose now certifies " + $scope.visit.patient + " as fully vaccinated as per the CDC and FDA's guidelines on interchangeably dosing with Covid19 vaccines.")) {
 										fullyVaccinatedMessage += firstName + " " + lastName + " is already fully vaccinated with FDA and CDC approved interchangeably dosed vaccines.\n";
 									}
 								}
 							}
-
-							console.log(fullyVaccinatedMessage);
 
 							// if the dose number isn't 1 + the patient's current dosage, return error 
 							if (fullyVaccinatedMessage != "") {
@@ -428,6 +416,42 @@
 							}
 						});
 					}
+
+					$scope.ageRangeCheck = function() {
+                        // abort if a vaccine hasn't been selected yet
+						if ($scope.selectedVaccine == undefined || $scope.visit.patient == undefined || $scope.visit.type != "VACCINE_APPOINTMENT") {
+							$scope.doseNumError = "";
+							return undefined;
+						}
+							
+
+						var firstName;
+						var lastName;
+						var patientDOB;
+						
+						// get current patient
+						for (var i = 0; i < $scope.patients.length; i++ ) {
+							if ($scope.patients[i].username == $scope.visit.patient) {
+								firstName = $scope.patients[i].firstName;
+								lastName = $scope.patients[i].lastName;
+								patientDOB = $scope.patients[i].dateOfBirth;
+							}
+						}
+						// check age range
+						var lowerAgeLimit = $scope.selectedVaccine.ageRange[0];
+						var upperAgeLimit = $scope.selectedVaccine.ageRange[1];
+						var curDate = new Date();
+						patientDOB = new Date(patientDOB);
+						var patientAge = (parseInt(curDate.getFullYear())) - parseInt(patientDOB.getFullYear());
+						var validAge = lowerAgeLimit <= patientAge && patientAge <= upperAgeLimit;
+						if (!validAge) {
+                            if ($scope.doseNumError == undefined)
+                                $scope.doseNumError = "";
+                            $scope.doseNumError = "Patient isn't within the age range for the " + $scope.selectedVaccine.name + " vaccine.";
+                        } else {
+                            $scope.doseNumError = "";
+                        }
+                    }
 
 					$scope.checkDoseNumber = function() {
 						// abort if a vaccine hasn't been selected yet
@@ -475,7 +499,6 @@
 							var curDate = new Date();
 							patientDOB = new Date(patientDOB);
 							var patientAge = (parseInt(curDate.getFullYear())) - parseInt(patientDOB.getFullYear());
-							var validAge = lowerAgeLimit <= patientAge && patientAge <= upperAgeLimit;
 
 							var currentDosage;
 							if (vaccineDoses[$scope.selectedVaccine.code] == undefined) {
@@ -576,8 +599,6 @@
 								$scope.errorMsg += "Confirm the dosage number with the patient before submitting\n";
 								$scope.showDoseWarningBtn = true;
 							}
-							if (!validAge)
-								$scope.doseNumError = "Patient isn't withing the age range for the " + $scope.selectedVaccine.name + " vaccine.";
 						});
 					}
 
@@ -763,7 +784,7 @@
                             for (i = 0; i < techLength; i++) {
                                 //passing to inner loop taken from https://stackoverflow.com/questions/17244614/passing-variable-to-promise-in-a-loop
                                 (function (i) {
-                                    $http.get("/iTrust2/api/v1/labprocedures/byUser/" + $scope.tech[i].self.username).then(
+                                    $http.get("/iTrust2/api/v1/labprocedures/byUser/" + $scope.tech[i].username).then(
                                         function (response) {
                                             $scope.tech[i].numAssigned = response.data.length;
                                         }, function (rejection) {
@@ -1360,7 +1381,7 @@
 															<label> <input type="radio"
 																ng-model="$parent.visit.patient" name="name"
 																value="{{patient.username}}" required="true"
-																ng-change='patientSelect(patient); loadVaccineAppointmentRequests(); checkDoseNumber(); checkVaccinationStatus()'
+																ng-change='patientSelect(patient); ageRangeCheck(); loadVaccineAppointmentRequests(); checkDoseNumber(); checkVaccinationStatus();'
 																id="{{patient.username}}" />&nbsp;{{patient.username}}
 														</label>
 														</li>
@@ -1378,7 +1399,7 @@
 													<ul
 														style="max-height: 15%; overflow: auto; list-style: none;">
 														<li ng-repeat="type in types"><label> <input
-																type="radio" ng-model="$parent.visit.type" ng-change="loadVaccineAppointmentRequests(); checkVaccinationStatus()"
+																type="radio" ng-model="$parent.visit.type" ng-change="ageRangeCheck(); loadVaccineAppointmentRequests(); checkVaccinationStatus()"
 																name="{{type}}" value="{{type}}" required="true" /> {{type
 																| humanize}}
 														</label></li>
@@ -1545,7 +1566,7 @@
 													<div class="form-group row">
 														<div class="col-xs-6">
 															<label>Vaccine Type: </label>
-															<select style="width:350px;" ng-options="vaccine.name for vaccine in vaccines" ng-model="selectedVaccine" class="form-control" ng-change="updateFollowupVaccine(); updateFollowupDate(); checkDoseNumber()">
+															<select style="width:350px;" ng-options="vaccine.name for vaccine in vaccines" ng-model="selectedVaccine" class="form-control" ng-change="updateFollowupVaccine(); updateFollowupDate(); checkDoseNumber(); ageRangeCheck()">
 																<option value="" disabled selected>{{preferredVaccine}}</option>
 															</select>
 														</div>
@@ -1563,7 +1584,7 @@
 										</div>
 									</div>
 
-									<div class="col-md-4" ng-show="doseNumber < selectedVaccine.numDoses && !mixAndMatchFullyDosed">
+									<div class="col-md-4" ng-show="doseNumber < selectedVaccine.numDoses && !mixAndMatchFullyDosed && doseNumber != undefined && doseNumber != ''">
 										<div class="panel panel-info">
 											<div class="panel-heading">
 												<h4>Schedule Followup Vaccination Appointment</h4>

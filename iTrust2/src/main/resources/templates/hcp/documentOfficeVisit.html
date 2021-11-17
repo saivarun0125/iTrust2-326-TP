@@ -562,6 +562,8 @@
 								$scope.mixAndMatchWarning = "";
 								$scope.errorMsg = $scope.errorMsg.replace("Patient already fully vaccinated against Covid19\n", '');
 								$scope.errorMsg += "Patient already fully vaccinated against Covid19\n";
+							}  else if (!$scope.ageRangeCheck()) {
+								// age is invalid
 							} else if (!($scope.selectedVaccine.code in vaccineDoses) && doseNumber == 1) {
 								// if the patient hasn't recieved the vaccine before the dose number should be 1
 								$scope.doseNumError = "";
@@ -590,8 +592,6 @@
 								$scope.doseNumError = "The dose number of this visit can't be equal to or less than their current dose (" + currentDosage + " " + plural + ").";
 								$scope.errorMsg = $scope.errorMsg.replace("Invalid dose number\n", '');
 								$scope.errorMsg += "Invalid dose number\n";
-							}  else if (!$scope.ageRangeCheck()) {
-								// age is invalid
 							} else {
 								// if the above criteria aren't met, something is wrong, print error
 								$scope.doseNumError = "WARNING: " + firstName + " " + lastName + " has " + currentDosage + " recorded doses of the " + $scope.selectedVaccine.name + " vaccine. Their next dose should be dose number " + (currentDosage + 1) + ", please confirm that they have recieved doses elsewhere before continuing.";

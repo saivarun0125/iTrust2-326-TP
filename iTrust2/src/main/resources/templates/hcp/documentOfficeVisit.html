@@ -153,6 +153,8 @@
 							} else if (intervalType == 'WEEKS') {
 								aptDate.setDate(aptDate.getDate() + (intervalAmount * 7));
 							} else if (intervalType == "MONTHS") {
+								console.log("Months");
+
 								aptDate.setMonth(aptDate.getMonth() + intervalAmount);
 							} else if (intervalType == "YEARS") {
 								aptDate.setFullYear(aptDate.getFullYear() + intervalAmount);
@@ -263,9 +265,20 @@
 						hrNum = parseInt(hourStr);
 
 						if (hrNum < 12) {
-							timeStr = (hrNum % 12) + ":" + minStr + "AM";
+							if (hrNum == 0) {
+								hrNum = 12;
+							} else {
+								hrNum = hrNum % 12;
+							}
+
+
+							timeStr = hrNum + ":" + minStr + "AM";
 						} else {
-							timeStr = (hrNum % 12) + ':' + minStr + "PM";
+							var hour = (hrNum % 12);
+							if (hour == 0) {
+								hour = 12;
+							}
+							timeStr = hour + ':' + minStr + "PM";
 						}
 
 						returnString = "Appointment for " + input['patient']['firstName'] + " " + input['patient']['lastName'] + " at " + timeStr + " on " + dateStr;
@@ -545,7 +558,7 @@
 
 							if (alreadyDosed) {
 								$scope.mixAndMatchWarning += "Please review current FDA and CDC guidelines for interchangeably dosing between the";
-								for (var i = 1; i < dosedWith.length - 1; i++) {
+								for (var i = 0; i < dosedWith.length - 1; i++) {
 									$scope.mixAndMatchWarning += " " + dosedWith[i] + ",";
 								}
 								$scope.mixAndMatchWarning += " and " + dosedWith[dosedWith.length - 1];
@@ -654,7 +667,7 @@
 								} else {
 									visit['appointment'] = null;
 								}
-									
+								
 								visit['vaccine'] = $scope.selectedVaccine['code'];
 								visit['date'] = $scope.visitInputDateTime;
 								$http({
@@ -692,6 +705,8 @@
 							$scope.visit = visit;
 							await sleep(2000);
 						}
+
+						doseWarningConfirmSubmit = false;
 					}
 
 					$scope.updatePreferred = function(){
@@ -961,7 +976,9 @@
 					$scope.visit = {};
 
 					$scope.getButtonTemplate = function() {
-						if ($scope.visit.type == "VACCINE_APPOINTMENT" && "doseNumber" in $scope && "selectedVaccine" in $scope && $scope.selectedVaccine != undefined && $scope.doseNumber != undefined && $scope.doseNumber < $scope.selectedVaccine.numDoses) {
+						if ($scope.mixAndMatchFullyDosed == undefined)
+							$scope.mixAndMatchFullyDosed = false;
+						if (!$scope.mixAndMatchFullyDosed && $scope.visit.type == "VACCINE_APPOINTMENT" && "doseNumber" in $scope && "selectedVaccine" in $scope && $scope.selectedVaccine != undefined && $scope.doseNumber != undefined && $scope.doseNumber < $scope.selectedVaccine.numDoses) {
 							return "officevisitandvaccinerequest";
 						} else {
 							return "officevisitonly";
@@ -1023,9 +1040,7 @@
                                 });
 
                                 $scope.visit.labProcedures = $scope.procedures;
-
 								
-
 								$http({
                                 	method: 'POST',
                                 	url: '/iTrust2/api/v1/officevisits',
@@ -1074,6 +1089,9 @@
 									visit['doseNumber'] = $scope.doseNumber;
 								visit['vaccine'] = $scope.selectedVaccine['code'];
 								visit['date'] = $scope.visitInputDateTime;
+
+								console.log(doseWarningConfirmSubmit);
+								console.log(visit);
 								$http({
                             		method: 'POST',
                             		url: '/iTrust2/api/v1/vaccineofficevisits',
@@ -1174,6 +1192,7 @@
 									$scope.appointment['date'] = $scope.inputDateTime.toISOString(); 
 									$scope.appointment['type'] = "VACCINE_APPOINTMENT";
 									$scope.appointment['patient'] = $scope.visit.patient;
+									console.log($scope.appointment);
 									$http.post("/iTrust2/api/v1/vaccineappointmentrequestsHCP", $scope.appointment).then( 
 									function(response) {
 										$scope.message = "";
@@ -1385,7 +1404,7 @@
 															<label> <input type="radio"
 																ng-model="$parent.visit.patient" name="name"
 																value="{{patient.username}}" required="true"
-																ng-change='patientSelect(patient); ageRangeCheck(); loadVaccineAppointmentRequests(); checkDoseNumber(); checkVaccinationStatus();'
+																ng-change='patientSelect(patient); ageRangeCheck(); loadVaccineAppointmentRequests(); checkVaccinationStatus(); checkDoseNumber();'
 																id="{{patient.username}}" />&nbsp;{{patient.username}}
 														</label>
 														</li>
@@ -1403,7 +1422,7 @@
 													<ul
 														style="max-height: 15%; overflow: auto; list-style: none;">
 														<li ng-repeat="type in types"><label> <input
-																type="radio" ng-model="$parent.visit.type" ng-change="ageRangeCheck(); loadVaccineAppointmentRequests(); checkVaccinationStatus()"
+																type="radio" ng-model="$parent.visit.type" ng-change="ageRangeCheck(); loadVaccineAppointmentRequests(); checkVaccinationStatus();"
 																name="{{type}}" value="{{type}}" required="true" /> {{type
 																| humanize}}
 														</label></li>
@@ -1570,7 +1589,7 @@
 													<div class="form-group row">
 														<div class="col-xs-6">
 															<label>Vaccine Type: </label>
-															<select style="width:350px;" ng-options="vaccine.name for vaccine in vaccines" ng-model="selectedVaccine" class="form-control" ng-change="updateFollowupVaccine(); updateFollowupDate(); checkDoseNumber(); ageRangeCheck()">
+															<select style="width:350px;" ng-options="vaccine.name for vaccine in vaccines" ng-model="selectedVaccine" class="form-control" ng-change="updateFollowupVaccine(); updateFollowupDate(); checkDoseNumber(); ageRangeCheck();">
 																<option value="" disabled selected>{{preferredVaccine}}</option>
 															</select>
 														</div>
@@ -1588,7 +1607,7 @@
 										</div>
 									</div>
 
-									<div class="col-md-4" ng-show="doseNumber < selectedVaccine.numDoses && !mixAndMatchFullyDosed && doseNumber != undefined && doseNumber != ''">
+									<div id="followupdiv" class="col-md-4" ng-show="doseNumber < selectedVaccine.numDoses && !mixAndMatchFullyDosed && doseNumber != undefined && doseNumber != ''">
 										<div class="panel panel-info">
 											<div class="panel-heading">
 												<h4>Schedule Followup Vaccination Appointment</h4>

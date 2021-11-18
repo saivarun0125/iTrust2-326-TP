@@ -21,7 +21,12 @@ public enum AppointmentType {
     /**
      * Ophthalmology Surgery
      */
-    OPHTHALMOLOGY_SURGERY ( 3 );
+    OPHTHALMOLOGY_SURGERY ( 3 ),
+
+    /**
+     * Vaccine Appointment
+     */
+    VACCINE_APPOINTMENT ( 4 );
 
     /**
      * Numerical code of the AppointmentType

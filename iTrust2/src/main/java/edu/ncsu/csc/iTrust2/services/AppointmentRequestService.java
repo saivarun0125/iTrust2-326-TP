@@ -77,7 +77,7 @@ public class AppointmentRequestService extends Service<AppointmentRequest, Long>
 
     /**
      * Builds an AppointmentRequest from the deserialised form
-     * 
+     *
      * @param raf
      *            AppointmentRequestForm containing data to build an AR from
      * @return Built AppointmentRequest

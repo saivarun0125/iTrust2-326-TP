@@ -23,6 +23,7 @@ import edu.ncsu.csc.iTrust2.models.enums.Status;
 import edu.ncsu.csc.iTrust2.models.enums.TransactionType;
 import edu.ncsu.csc.iTrust2.services.AppointmentRequestService;
 import edu.ncsu.csc.iTrust2.services.UserService;
+import edu.ncsu.csc.iTrust2.services.VaccineAppointmentRequestService;
 import edu.ncsu.csc.iTrust2.utils.LoggerUtil;
 
 /**
@@ -41,15 +42,21 @@ public class APIAppointmentRequestController extends APIController {
      * AppointmentRequest service
      */
     @Autowired
-    private AppointmentRequestService service;
+    private AppointmentRequestService        service;
+
+    /**
+     * AppointmentRequest service
+     */
+    @Autowired
+    private VaccineAppointmentRequestService vaxService;
 
     /** LoggerUtil */
     @Autowired
-    private LoggerUtil                loggerUtil;
+    private LoggerUtil                       loggerUtil;
 
     /** User service */
     @Autowired
-    private UserService<User>         userService;
+    private UserService<User>                userService;
 
     /**
      * Retrieves a list of all AppointmentRequests in the database
@@ -76,8 +83,13 @@ public class APIAppointmentRequestController extends APIController {
     @PreAuthorize ( "hasAnyRole('ROLE_PATIENT')" )
     public List<AppointmentRequest> getAppointmentRequestsForPatient () {
         final User patient = userService.findByName( LoggerUtil.currentUser() );
-        return service.findByPatient( patient ).stream().filter( e -> e.getStatus().equals( Status.PENDING ) )
-                .collect( Collectors.toList() );
+        final List<AppointmentRequest> result = service.findByPatient( patient ).stream()
+                .filter( e -> e.getStatus().equals( Status.PENDING ) ).collect( Collectors.toList() );
+        // result.addAll( vaxService.findByPatient( patient ).stream()
+        // .filter( e -> e.getStatus().equals( Status.APPROVED ) ).collect(
+        // Collectors.toList() ) );
+        return result;
+
     }
 
     /**
@@ -167,6 +179,8 @@ public class APIAppointmentRequestController extends APIController {
     @DeleteMapping ( BASE_PATH + "/appointmentrequests/{id}" )
     @PreAuthorize ( "hasAnyRole('ROLE_HCP', 'ROLE_PATIENT')" )
     public ResponseEntity deleteAppointmentRequest ( @PathVariable final Long id ) {
+        System.out.println( "DELETE VACCINE REQUEST" );
+        System.out.println( id.toString() );
         final AppointmentRequest request = service.findById( id );
         if ( null == request ) {
             return new ResponseEntity( errorResponse( "No AppointmentRequest found for id " + id ),
